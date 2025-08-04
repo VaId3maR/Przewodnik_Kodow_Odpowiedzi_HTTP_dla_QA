@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP Status Codes - Przewodnik dla Testerów</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header>
+        <h1>HTTP Status Codes</h1>
+        <p class="subtitle">Kompletny przewodnik po kodach HTTP z perspektywy testowania</p>
+
+        <div class="search-container">
+            <input type="text" id="search" placeholder="Szukaj statusu kodu lub opisu..." onkeyup="filterCodes()">
+        </div>
+
+        <div class="quick-nav">
+            <button onclick="scrollToSection('informational')">1xx Informacyjne</button>
+            <button onclick="scrollToSection('success')">2xx Sukcesu</button>
+            <button onclick="scrollToSection('redirection')">3xx Przekierowania</button>
+            <button onclick="scrollToSection('client-error')">4xx Błądu klienta</button>
+            <button onclick="scrollToSection('server-error')">5xx Błądu serwera</button>
+            <button onclick="scrollToSection('checklist')">Checklista</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- 1xx INFORMATIONAL -->
+        <section class="category-section" id="informational">
+            <h2 class="category-title">1xx - Kody Informacyjne</h2>
+
+            <div class="status-code informational" data-category="1xx">
+                <h3>100 Continue</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer otrzymał początek żądania i klient może kontynuować wysyłanie
+                    reszty.
+                </div>
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Wysyłanie dużych plików.</br>
+                    • Upload z nagłówkiem <code>Expect: 100-continue</code>.</br>
+                    • Streaming danych.
+                </div>
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • Upload dużego pliku.</br>
+                    • Użyj curl z nagłówkiem <code>Expect: 100-continue</code>.</br>
+                    • Testuj streaming API.
+                </div>
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. Idź na stronę z funkcją uploadu (np. <i>Google Drive</i>, <i>Dropbox</i>).</br>
+                        2. Wybierz duży plik (np. film lub zdjęcie).</br>
+                        3. Otwórz <i>DevTools</i> → zakładka <i>Network</i>.</br>
+                        4. Kliknij <i>Upload</i> (Obserwuj ruch w zakładce <i>Network</i>).</br>
+                        5. Najpierw powinien pojawić się kod <code>100 Continue</code> → Następnie kod
+                        <code>200 OK</code>.
+                    </div>
+                    <h4>Co testujemy?</h4>
+                    <p>Czy przesyłanie dużych plików odbywa się zgodnie z protokołem <i>HTTP</i>, czyli:</p>
+                    • Serwer najpierw przyjmuje zapytanie <code>Expect: 100-continue</code>.</br>
+                    • Następnie, po zaakceptowaniu, odpowiada <code>100 Continue</code>.</br>
+                    • Po pełnym przesłaniu pliku odsyła <code>200 OK</code> – oznacza to, że upload się
+                    powiódł.</br>
+                    • Czy serwer obsługuje poprawnie długotrwałe połączenia i nie zrywa ich w trakcie przesyłania
+                    dużych danych.</br>
+                    <h4>Podsumowanie</h4>
+                    ✅ <code>100 Continue</code> oznacza, że serwer zaakceptował początek żądania → Następnie klient
+                    przesyła resztę
+                    danych (np. zawartość pliku) → Po zakończeniu przesyłu pojawia się końcowa odpowiedź, zwykle <code>200
+                    OK</code>.</br>
+                    ❌ Jeśli 100 Continue się nie pojawia lub po nim nie następuje <code>200 OK</code>, może to wskazywać
+                    na
+                    problem z konfiguracją serwera, błędne nagłówki <i>HTTP</i>, lub błędną implementację uploadu po
+                    stronie klienta.
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+                    🔍 <strong>Diagnostyka i testowanie</strong></br>
+                    • Kod <code>100 Continue</code> pomaga debugować i testować przesyłanie dużych danych (np.
+                    uploady).</br>
+                    • Pozwala sprawdzić, czy serwer wstępnie akceptuje żądanie zanim klient wyśle całą treść.</br>
+                    • Przydatny w testach API z nagłówkiem <code>Expect: 100-continue</code>.</br>
+
+                    💾 <strong>Cache i dane</strong></br>
+                    • Nie dotyczy cache'owania, ale wpływa na efektywne przesyłanie danych (np. tylko po zatwierdzeniu
+                    nagłówków).</br>
+                    • QA powinien sprawdzać, czy po <code>100 Continue</code> pojawia się finalna odpowiedź (np.
+                    <code>200 OK</code>).</br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong></br>
+                    • Z punktu widzenia użytkownika kod 100 jest niewidoczny, ale wpływa na szybkość i niezawodność
+                    przesyłania plików.</br>
+                    • Brak poprawnego użycia może prowadzić do wolniejszego uploadu lub jego przerwania.</br>
+                    • QA powinien zweryfikować, czy upload działa płynnie przy dużych plikach lub słabszym łączu.</br>
+
+                </div>
+            </div>
+
+            <div class="status-code informational" data-category="1xx">
+                <h3>101 Switching Protocols</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer zgadza się zmienić sposób komunikacji (protokół) na inny, o
+                    który poprosił klient.
+                    Klient (np. przeglądarka) łączy się z serwerem przez <i>HTTP</i>, następnie mówi że chce komunikować
+                    się z
+                    serwerem przez inny protokół np. <i>WebSocket</i>. Serwer odpowiada klientowi że się zgadza na
+                    zmiane
+                    protokołu i wysyła kod <code>101 Switching Protocols</code> w odpowiedzi. Od tej pory komunikacja
+                    między klientem a serwerem odbywa
+                    się poprzez <i>WebSocket</i>.
+                </div>
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Upgrade do <i>WebSocket</i>.</br>
+                    • Zmiana protokołu komunikacji.
+                </div>
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • Testuj <i>WebSocket connections.</i></br>
+                    • Sprawdź upgrade headers.</br>
+                    • Testuj real-time features.
+                </div>
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        <h5>Przykład nr.1</h5>Otwórz aplikację z czatem online → Otwórz
+                        <i>DevTools</i> → zakładka <i>Network</i> → Zainicjuj połączenie czatu → W zakładce
+                        <i>Network</i> zobacz handshake: status <code>101 Switching Protocols</code> → Połączenie
+                        <i>WebSocket</i> aktywne.
+                    </div>
+                    <div class="status-code">
+                        <h5>Przykład nr.2</h5>
+                        W aplikacjach z WebSocket (np. czat, powiadomienia, gry online) zmiany wykonane przez jednego
+                        użytkownika powinny być natychmiast widoczne dla innych.</br>
+                        1. Otwieramy czat w dwóch kartach.</br>
+                        2. W pierwszej karcie piszemy: "Hello world!"</br>
+                        3. W drugiej karcie bez odświeżania pojawia się "Hello world!" – to znaczy, że real-time
+                        działa.</br>
+                    </div>
+                    <h4>Co testujemy?</h4>
+                    • Czy WebSocket działa poprawnie i przesyła dane w czasie rzeczywistym.</br>
+                    • Czy serwer wysyła powiadomienia do wszystkich połączonych klientów.</br>
+                    • Czy nie trzeba odświeżać strony, żeby zobaczyć nowe dane.</br>
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli wiadomość/akcja pojawia się od razu – wszystko działa dobrze.</br>
+                    ❌ Jeśli trzeba odświeżyć stronę, żeby zobaczyć zmiany – coś jest nie tak z real-time (WebSocket,
+                    serwer, kod frontendu).
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+                    🔍 <strong>Diagnostyka i testowanie</strong></br>
+                    • Kod <code>101 Switching Protocols</code> potwierdza, że serwer zgodził się na zmianę protokołu
+                    (np. na <code>WebSocket</code>).</br>
+                    • QA powinien monitorować handshake i upewnić się, że przełączenie protokołu następuje zgodnie z
+                    oczekiwaniami.</br>
+                    • Kluczowy dla testów komunikacji w czasie rzeczywistym (czaty, powiadomienia, gry online).</br>
+
+                    💾 <strong>Cache i dane</strong></br>
+                    • Po przełączeniu na WebSocket nie używa się tradycyjnych mechanizmów cache'owania.</br>
+                    • QA powinien sprawdzać, czy dane przesyłane po zmianie protokołu są spójne, szybkie i nie zacinają
+                    się.</br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong></br>
+                    • Klient końcowy oczekuje natychmiastowej reakcji (np. wiadomość pojawia się w drugiej karcie w
+                    czasie rzeczywistym).</br>
+                    • Brak poprawnego przełączenia może objawiać się brakiem synchronizacji danych lub „zamrożeniem”
+                    interfejsu.</br>
+                    • QA powinien testować, czy dane są przesyłane bez opóźnień i widoczne bez odświeżania strony.</br>
+                </div>
+            </div>
+            <div class="status-code informational" data-category="1xx">
+                <h3>103 Early Hints</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer informuje klienta (np. przeglądarkę), że już wie, które zasoby
+                    będą potrzebne do załadowania pełnej strony i sugeruje, by klient zaczął je pobierać wcześniej,
+                    zanim nadejdzie właściwa odpowiedź (np. kod 200).<br>
+                    Kod 103 to tzw. <em>Early Hints</em> – wczesne podpowiedzi, które pozwalają skrócić czas ładowania
+                    strony (np. preload CSS, JS, czcionek).
+                </div>
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Przy optymalizacji wydajności ładowania stron</br>
+                    • Gdy serwer chce wysłać nagłówki <code>Link: &lt;...&gt;; rel=preload</code> zanim wygeneruje całą
+                    odpowiedź</br>
+                    • Przed kodem 200 OK, gdy generowanie odpowiedzi może potrwać
+                </div>
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • Włącz DevTools → zakładka Network → odśwież stronę z zaawansowanym preloadem</br>
+                    • Sprawdź, czy pojawia się kod 103 zanim otrzymasz 200</br>
+                    • Sprawdź nagłówki <code>Link</code> w odpowiedzi 103</br>
+                    • Użyj narzędzi takich jak webpagetest.org lub Lighthouse
+                </div>
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        <h5>Przykład nr.1</h5>
+                        Otwórz stronę z dużą ilością zasobów (np. Next.js, React z SSR).<br>
+                        W DevTools (Network) odśwież stronę.<br>
+                        Zobacz, że najpierw przychodzi odpowiedź <strong>103 Early Hints</strong>, a dopiero potem
+                        <strong>200 OK</strong>.<br>
+                        W nagłówkach odpowiedzi 103 powinieneś zobaczyć np.:<br>
+                        <code>Link: &lt;/styles.css&gt;; rel=preload; as=style</code><br>
+                        <code>Link: &lt;/main.js&gt;; rel=preload; as=script</code>
+                    </div>
+                    <div class="status-code">
+                        <h5>Przykład nr.2</h5>
+                        Skonfiguruj serwer (np. Apache, Nginx, Node.js z Express), by wspierał 103 Early Hints.</br>
+                        Dodaj preloadowanie zasobów w nagłówkach.</br>
+                        Ustaw opóźnienie w generowaniu głównej odpowiedzi (np. symulacja opóźnienia w backendzie).</br>
+                        Obserwuj, czy przeglądarka zaczyna ładować zasoby wcześniej, jeszcze zanim przyjdzie kod 200.
+                    </div>
+                    <h4>Co testujemy?</h4>
+                    • Czy serwer wspiera 103 i wysyła poprawne nagłówki <code>Link</code>.</br>
+                    • Czy przeglądarka respektuje te podpowiedzi i zaczyna ładować zasoby z wyprzedzeniem.</br>
+                    • Czy skrócony jest czas renderowania strony (TTFB, LCP).</br>
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli zasoby zaczynają się ładować przed odpowiedzią 200 – 103 działa poprawnie.</br>
+                    ❌ Jeśli zasoby są ładowane dopiero po 200 – 103 nie działa lub nie jest wspierany przez
+                    serwer/przeglądarkę.
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+                    🔍 <strong>Diagnostyka i testowanie</strong></br>
+                    • Kod <code>103 Early Hints</code> pomaga sprawdzić, czy przeglądarka może wcześniej rozpocząć
+                    ładowanie zasobów (np. <code>preload</code>, <code>stylesheet</code>).</br>
+                    • QA powinien monitorować, czy zasoby są zapowiedziane zanim nadejdzie główna odpowiedź
+                    (<code>200 OK</code>).</br>
+                    • Można testować za pomocą DevTools, porównując czasy ładowania zasobów.</br>
+
+                    💾 <strong>Cache i dane</strong></br>
+                    • <code>103 Early Hints</code> nie zwraca treści, ale zapowiada jej nadejście — QA może sprawdzić,
+                    czy poprawnie działają
+                    mechanizmy <code>Link</code> i <code>preload</code>.</br>
+                    • Wpływa pośrednio na skuteczność ładowania zasobów z cache (szybsze ich pobranie może zmniejszyć
+                    czas oczekiwania).</br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong></br>
+                    • Brak <code>103 Early Hints</code> może oznaczać wolniejsze ładowanie, nawet jeśli backend działa
+                    prawidłowo.</br>
+                    • QA powinien testować czas renderowania kluczowych zasobów (np. CSS, czcionki) i ocenić wpływ na
+                    UX.</br>
+
+                </div>
+            </div>
+            <div class="status-code informational" data-category="1xx">
+                <h3>110 Connection Timed Out</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Przeglądarka lub inny klient otrzymał informację, że połączenie z
+                    serwerem proxy przekroczyło dopuszczalny czas oczekiwania. Oznacza to, że serwer pośredniczący (np.
+                    proxy lub CDN) nie otrzymał na czas odpowiedzi od serwera źródłowego i zgłosił to jako ostrzeżenie
+                    (nie błąd). Ten kod nie pochodzi z głównej odpowiedzi HTTP, ale z nagłówka ostrzegającego klienta o
+                    potencjalnych problemach z łącznością.
+                </div>
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Połączenie przez serwer proxy trwa zbyt długo.</br>
+                    • Backend nie odpowiada w ustalonym czasie.</br>
+                    • CDN lub load balancer nie może uzyskać odpowiedzi od serwera źródłowego.
+                </div>
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • Symuluj wolne odpowiedzi backendu (np. dodaj sztuczne opóźnienie).</br>
+                    • Skorzystaj z serwera proxy i monitoruj nagłówki ostrzeżeń.</br>
+                    • Sprawdź nagłówek <code>Warning</code> w odpowiedziach HTTP (np.
+                    <code>110 - Response is stale</code>).
+                </div>
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. Otwórz przeglądarkę (np. Chrome).</br>
+                        2. Przejdź do strony o bardzo wolnym ładowaniu (np. testowy serwer lub dowolny duży plik).</br>
+                        3. Otwórz DevTools → zakładka Network.</br>
+                        4. Obserwuj odpowiedź HTTP i nagłówki „Headers”.</br>
+                        5. W sekcji nagłówków szukaj linii z <code>Warning: 110</code>.
+                    </div>
+                    <h4>Co testujemy?</h4>
+                    • Czy serwer proxy/CDN wykrywa zbyt długi czas odpowiedzi od backendu.</br>
+                    • Czy klient (np. przeglądarka, aplikacja) otrzymuje nagłówek ostrzeżenia
+                    <code>Warning: 110</code>.</br>
+                    • Czy aplikacja reaguje na zbyt wolne odpowiedzi (np. pokazuje komunikat, loguje błąd).</br>
+                    • Czy infrastruktura pośrednicząca (np. Cloudflare, Varnish, Squid) poprawnie obsługuje ostrzeżenia
+                    związane z opóźnieniami.</br>
+                    • Czy odpowiedź HTTP zawiera kompletne nagłówki diagnostyczne (np. Warning, Age, Via, X-Cache), co
+                    może pomóc w debugowaniu problemów z wydajnością.</br>
+                    • Czy nieaktualna lub przeterminowana zawartość jest właściwie oznaczona jako „stale”
+                    (przestarzała), zamiast błędnie uznawana za aktualną.
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli klient otrzymuje nagłówek <code>Warning: 110</code>, system poprawnie raportuje
+                    przekroczenie
+                    czasu.</br>
+                    ❌ Brak takiego ostrzeżenia mimo długiego oczekiwania – proxy lub aplikacja mogą nie obsługiwać
+                    tego kodu.</br>
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+                    🔍 <strong>Diagnostyka i testowanie</strong></br>
+                    • Brak <code>Warning: 110</code> utrudnia debugowanie i ukrywa problemy z wydajnością backendu.</br>
+                    • Trudniej pisać testy E2E lub monitorować opóźnienia w czasie rzeczywistym.</br>
+                    • QA nie widzi sygnałów, że system działa wolno lub nieaktualnie.</br>
+
+                    💾 <strong>Cache i dane</strong></br>
+                    • Przestarzałe dane mogą być traktowane jako aktualne.</br>
+                    • Aplikacja może działać na nieaktualnych danych (błędne decyzje lub niespójności).</br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong></br>
+                    • Aplikacja nie informuje użytkownika o problemie z backendem.</br>
+                    • Użytkownik czeka, ale nic się nie dzieje (brak komunikatu, spinner się kręci).</br>
+                    • Obniża to jakość produktu i może generować zgłoszenia błędów, których można było uniknąć.</br>
+                </div>
+            </div>
+
+
+        </section>
+
+        <!-- 2xx SUCCESS -->
+        <section class="category-section" id="success">
+            <h2 class="category-title">2xx - Kody Sukcesu</h2>
+
+            <div class="status-code success" data-category="2xx">
+                <h3>200 OK</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Żądanie zostało poprawnie przetworzone przez serwer, a odpowiedź
+                    została zwrócona bez błędów. To najczęstszy i najbardziej pożądany kod HTTP – oznacza, że wszystko
+                    działa prawidłowo.
+                </div>
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Poprawne załadowanie strony lub zasobu.</br>
+                    • Udane zapytanie do API.</br>
+                    • Jako zwykła odpowiedź z serwera.
+                </div>
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. Wejdź na stronę.</br>
+                        2. Naciśnij <kbd>F12</kbd>, aby otworzyć <i>DevTools</i>, i przejdź do zakładki
+                        <i>Network</i>.</br>
+                        3. Odśwież stronę (klawisz <kbd>F5</kbd>).</br>
+                        5. Sprawdź w szczegółach, czy pojawił się status <code>200 OK</code>.
+                    </div>
+                    <h4>Co testujemy?</h4>
+                    • Czy serwer działa prawidłowo i odpowiada na żądania.</br>
+                    • Czy strona ładuje się bez błędów.</br>
+                    • Czy żądanie <i>HTTP</i> zakończyło się sukcesem.
+                    <h4>Podsumowanie</h4>
+                    ✅ <code>200 OK</code> to znak, że wszystko działa poprawnie – serwer przyjął żądanie, przetworzył je
+                    i odesłał odpowiedź.</br>
+                    ❌ Brak kodu <code>200 OK</code> lub jego brak na głównym żądaniu strony może świadczyć o błędach
+                    ładowania,
+                    przekierowaniach lub problemach z serwerem.
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+                    🔍 <strong>Diagnostyka i testowanie</strong></br>
+                    • Kod <code>200 OK</code> potwierdza, że żądanie zakończyło się sukcesem — istotny punkt odniesienia
+                    w testach pozytywnych.</br>
+                    • Ułatwia identyfikację, czy problem leży po stronie klienta czy serwera.</br>
+                    • QA powinien sprawdzać nie tylko status, ale też zawartość odpowiedzi (np. strukturę danych).</br>
+
+                    💾 <strong>Cache i dane</strong></br>
+                    • Odpowiedź <code>200 OK</code> może pochodzić z cache — sprawdzaj nagłówki
+                    <code>Cache-Control</code>,
+                    <code>Age</code>, <code>ETag</code>.</br>
+                    • Dane mogą być formalnie poprawne <code>200 OK</code>, ale logicznie błędne (np. puste,
+                    niepełne).</br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong></br>
+                    • Mimo poprawnego statusu użytkownik może nie zobaczyć oczekiwanych danych (np. pusty ekran).</br>
+                    • QA powinien upewnić się, że sukces techniczny przekłada się na sukces z perspektywy
+                    użytkownika.</br>
+                </div>
+            </div>
+
+
+            <div class="status-code success" data-category="2xx">
+                <h3>201 Created</h3>
+                <div class="description"> <strong>Co to znaczy:</strong> Serwer potwierdza, że żądanie zostało pomyślnie
+                    przetworzone i w wyniku tego utworzono nowy zasób. <br> Kod 201 pojawia się najczęściej w odpowiedzi
+                    na żądanie <code>POST</code> i oznacza, że operacja zakończyła się sukcesem – a nowy obiekt (np.
+                    użytkownik, wpis, rekord) został zapisany w systemie. <br> W odpowiedzi serwer często zwraca
+                    nagłówek <code>Location</code>, który wskazuje adres nowo utworzonego zasobu. </div>
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4> • Po wysłaniu żądania <code>POST</code> tworzącego nowy zasób.</br> •
+                    Gdy
+                    serwer rzeczywiście utworzy nowy obiekt (np. rekord w bazie danych).</br> • Gdy aplikacja REST API
+                    potwierdza udane utworzenie zasobu.</br> • Często spotykany przy rejestracji użytkownika, dodawaniu
+                    wpisu, tworzeniu zasobu w CMS.
+                </div>
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4> • Wykonaj żądanie <code>POST</code> do endpointu tworzącego zasób.</br> •
+                    Sprawdź, czy odpowiedź zwraca kod <strong>201 Created</strong>.</br> • Zweryfikuj obecność nagłówka
+                    <code>Location</code> z adresem nowego zasobu.</br> • Sprawdź ciało odpowiedzi – może zawierać dane
+                    nowo utworzonego obiektu.</br> • Upewnij się, że zasób faktycznie istnieje (np. zapytanie GET zwraca
+                    ten obiekt).
+                </div>
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. Wejdź na stronę aplikacji, np. formularz dodawania zadania (np.
+                        <code>/nowe-zadanie</code>/nowe-zadanie albo
+                        <code>/dodaj</code>).</br>
+                        2. Wypełnij formularz.</br>
+                        3. Kliknij przycisk <i>Zapisz</i> lub <i>Dodaj</i>.</br>
+                        4. Otwórz narzędzia deweloperskie <i>DevTools</i> → zakładka <i>Network</i>.</br>
+                        5. Sprawdź żądanie <code>POST</code>:</br>
+                        - Status odpowiedzi: <code>201 Created</code>.</br>
+                        - Nagłówek Location (jeśli jest): zawiera link do nowego zasobu, np. /zadania/123.</br>
+                        - Odpowiedź zawiera dane nowo utworzonego elementu.
+                    </div>
+                    <h4>Co testujemy?</h4>
+                    • Czy zasób został utworzony w systemie (baza danych, plik, itp.).</br>
+                    • Czy serwer poprawnie zwraca kod <code>201 Created</code>.</br>
+                    • Czy nagłówek <code>Location</code> wskazuje właściwy <i>URI</i>.</br>
+                    • Czy zasób jest od razu dostępny po utworzeniu.</br>
+
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli nowy zasób został utworzony, a odpowiedź zawiera <code>201 Created</code> i poprawny
+                    <code>Location</code> – wszystko działa poprawnie.</br>
+                    ❌ Jeśli serwer zwraca <code>201 Created</code> lub <code>204 No content</code> mimo utworzenia
+                    zasobu oznacza
+                    to
+                    niepoprawną implementację REST.</br>
+
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+
+                    🔍 <strong>Diagnostyka i testowanie</strong></br>
+                    • Sprawdzenie, czy dane wejściowe prowadzą do poprawnego utworzenia obiektu.</br>
+                    • Walidacja odpowiedzi (nagłówki, ciało, kod).</br>
+                    • Testowanie przypadków brzegowych – duże obiekty, brak wymaganych pól.</br>
+
+                    💾 <strong>Cache i dane</strong></br>
+                    • Upewnij się, że wielokrotne <code>POST</code> tworzy nowe zasoby (a nie nadpisuje
+                    istniejące).</br>
+                    • Można porównać ID lub timestampy nowo utworzonych zasobów.</br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong></br>
+                    • Poprawna obsługa <code>201 Created</code> ułatwia implementację frontendu.</br>
+                    • Klienta może od razu przekierować do nowo utworzonego zasobu na podstawie
+                    nagłówka <code>Location</code>.</br>
+
+                </div>
+            </div>
+
+            <div class="status-code success" data-category="2xx">
+                <h3>202 Accepted</h3>
+                <div class="description"> <strong>Co to znaczy:</strong> Serwer potwierdza, że żądanie zostało przyjęte
+                    do przetworzenia, ale operacja nie została jeszcze zakończona.<br> Kod 202 oznacza, że żądanie jest
+                    poprawne i zaakceptowane, ale wynik działania będzie dostępny później – np. przetwarzanie w tle,
+                    asynchroniczne zadanie.<br> Odpowiedź nie zawiera gwarancji, że operacja zakończy się sukcesem, a
+                    zasób może jeszcze nie istnieć lub nie być gotowy. </div>
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4> • Po wysłaniu żądania, które wymaga dłuższego przetwarzania (np.
+                    przetwarzanie danych, wysyłka maili, zadania asynchroniczne).<br> • Gdy serwer chce potwierdzić
+                    przyjęcie żądania, ale nie zwraca od razu rezultatu.<br> • Typowe w API, gdzie operacje są
+                    wykonywane w tle lub wymagają kolejki.<br>
+                </div>
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4> • Wykonaj żądanie (np. <code>POST</code> lub <code>PUT</code>) do endpointu
+                    inicjującego przetwarzanie.<br> • Sprawdź, czy odpowiedź zawiera kod <code>202 Accepted</code>.<br>
+                    • Zweryfikuj, czy operacja zostanie wykonana później (np. zasób pojawi
+                    się po czasie, status przetwarzania zmieni się).<br>
+                </div>
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. Otwórz aplikację.<br>
+                        2. Wykonaj akcję, która uruchamia długotrwałe przetwarzanie (np. wysłanie formularza lub
+                        kliknięcie przycisku "Wyślij email").<br>
+                        3. Sprawdź w <i>DevTools</i> w zakładce <i>Network</i>, czy odpowiedź ma status
+                        <code>202 Accepted</code>.<br>
+                        4. Upewnij się, że aplikacja nie blokuje się i wyświetla informację, że żądanie jest
+                        przetwarzane.<br>
+                    </div>
+                </div>
+                <h4>Co testujemy?</h4> • Czy serwer prawidłowo potwierdza przyjęcie żądania kodem
+                <code>202 Accepted</code>.<br> • Czy klient poprawnie obsługuje asynchroniczność i nie traktuje
+                odpowiedzi jako gotowego rezultatu.<br> • Czy operacja faktycznie zostaje wykonana później.<br>
+                <h4>Podsumowanie</h4>
+                ✅ Jeśli odpowiedź zawiera <code>202 Accepted</code> i klient obsługuje ją jako potwierdzenie przyjęcia
+                do przetworzenia – wszystko działa poprawnie.<br>
+                ❌ Jeśli operacja wymaga natychmiastowego wyniku, a serwer zwraca 202 bez dalszej obsługi – implementacja
+                jest niepełna.<br>
+
+                <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+
+                🔍 <strong>Diagnostyka i testowanie</strong><br>
+                • Sprawdzenie, czy żądanie jest faktycznie przyjęte i operacja zaplanowana.<br>
+                • Walidacja kodu statusu i ewentualnych nagłówków informujących o dalszym procesie.<br>
+                • Testowanie obsługi błędów i timeoutów w przypadku długotrwałego przetwarzania.<br>
+
+                💾 <strong>Cache i dane</strong><br>
+                • Upewnij się, że brak jest błędnych odpowiedzi cache’owanych dla 202, które mogą wprowadzać klienta w
+                błąd.<br>
+                • Sprawdź, czy dane są spójne po zakończeniu przetwarzania.<br>
+
+                🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                • QA powinien zweryfikować, czy klient informuje użytkownika o statusie operacji (np. komunikat
+                „przetwarzanie w toku”).<br>
+                • Zapewnienie odpowiedniej obsługi interfejsu, by nie blokował się na oczekiwaniu.<br>
+            </div>
+
+            <div class="status-code success" data-category="2xx">
+                <h3>203 Non-Authoritative Information</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer zwraca odpowiedź z powodzeniem, ale dane pochodzą z innego
+                    źródła niż oryginalny serwer (np. proxy lub cache).<br>
+                    Kod 203 informuje, że zawartość odpowiedzi może być zmodyfikowana lub nie w pełni autoryzowana przez
+                    oryginalny serwer.<br>
+                    Jest to często używane przez serwery proxy lub cache, które dostarczają zmodyfikowane informacje w
+                    celu optymalizacji.
+                </div>
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Gdy odpowiedź pochodzi z serwera pośredniczącego lub cache, który zmodyfikował lub uzupełnił
+                    dane.<br>
+                    • Gdy serwer chce wskazać, że treść nie jest oryginalna, ale nadal poprawna.<br>
+                    • W sytuacjach, gdy klient powinien być świadomy możliwych modyfikacji w treści odpowiedzi.
+                </div>
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • Wykonaj żądanie HTTP do serwera korzystającego z proxy lub cache.<br>
+                    • Sprawdź, czy odpowiedź zwraca kod <strong>203 Non-Authoritative Information</strong>.<br>
+                    • Zweryfikuj zawartość odpowiedzi – może być zmodyfikowana względem oryginalnego źródła.<br>
+                    • Sprawdź nagłówki HTTP, które mogą wskazywać na pośredniczące serwery (np. <code>X-Cache</code>,
+                    <code>Via</code>).<br>
+                    • Porównaj odpowiedź z bezpośrednim zapytaniem do oryginalnego serwera (jeśli to możliwe).
+                </div>
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. Otwórz przeglądarkę i wykonaj żądanie do serwera, który korzysta z proxy lub cache (np.
+                        odśwież stronę kilka razy).<br>
+                        2. Otwórz narzędzia deweloperskie <i>DevTools</i> → zakładka <i>Network</i>.<br>
+                        3. Znajdź interesujące żądanie (np. <code>GET</code>).<br>
+                        4. Sprawdź, czy status odpowiedzi to <code>203 Non-Authoritative Information</code>.<br>
+                        5. Jeśli pojawi się ten kod, oznacza to, że dane mogą pochodzić z proxy lub cache.<br>
+                    </div>
+                    <h4>Co testujemy?</h4>
+                    • Czy serwer zwraca poprawny kod <code>203 Non-Authoritative Information</code>.<br>
+                    • Czy odpowiedź pochodzi z proxy/cache, co potwierdzają nagłówki.<br>
+                    • Czy klient rozpoznaje i poprawnie obsługuje informacje o modyfikowanej treści.<br>
+
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli odpowiedź zawiera kod <code>203 Non-Authoritative Information</code> i odpowiednie nagłówki
+                    proxy/cache – mechanizm działa
+                    poprawnie.<br>
+                    ❌ Jeśli serwer zawsze zwraca <code>200 OK</code> mimo korzystania z proxy/cache – może brakować
+                    informacji o
+                    modyfikacji danych.<br>
+
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+
+                    🔍 <strong>Diagnostyka i testowanie</strong><br>
+                    • Sprawdzenie, czy serwer poprawnie oznacza zmodyfikowane lub pośrednie odpowiedzi.<br>
+                    • Weryfikacja nagłówków świadczących o pośrednictwie proxy lub cache.<br>
+                    • Testowanie spójności danych między oryginalnym serwerem a odpowiedzią proxy.<br>
+
+                    💾 <strong>Cache i dane</strong><br>
+                    • Kod <code>203 Non-Authoritative Information</code> pozwala zidentyfikować, że dane mogą być
+                    pochodną cache lub proxy.<br>
+                    • QA powinien monitorować, czy klient obsługuje takie sytuacje bez błędów.<br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                    • Użytkownik może otrzymać dane szybciej dzięki cache, ale powinien być świadomy, że mogą być nieco
+                    zmodyfikowane.<br>
+                    • QA powinien ocenić wpływ na integralność i spójność prezentowanych informacji.<br>
+                </div>
+            </div>
+            <div class="status-code success" data-category="2xx">
+                <h3>204 No Content</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer pomyślnie przetworzył żądanie, ale nie ma żadnej treści do
+                    zwrócenia w odpowiedzi.<br>
+                    Kod 204 najczęściej pojawia się, gdy żądanie np. <code>PUT</code> lub <code>DELETE</code> zakończyło
+                    się
+                    sukcesem, ale klient nie potrzebuje żadnych danych zwrotnych.<br>
+                    Odpowiedź 204 nie zawiera ciała – tylko nagłówki. Często używana w API, gdy ważniejszy jest sam
+                    wynik
+                    działania niż dane.
+                </div>
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Po wykonaniu operacji <code>DELETE</code> (np. usunięcie obiektu).</br>
+                    • Po <code>PUT</code>, jeśli nie trzeba odsyłać zaktualizowanego obiektu.</br>
+                    • Po zapisaniu formularza AJAX-em, jeśli frontend nie potrzebuje treści zwrotnej.</br>
+                    • W REST API, gdy potwierdzenie działania wystarczy (bez danych).
+                </div>
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • Wykonaj żądanie <code>DELETE</code> lub <code>PUT</code> do API.</br>
+                    • Sprawdź, czy odpowiedź zawiera status <strong>204 No Content</strong>.</br>
+                    • Upewnij się, że odpowiedź **nie zawiera ciała** (response body jest puste).</br>
+                    • Zweryfikuj, że operacja została faktycznie wykonana (np. obiekt został usunięty lub zmieniony).
+                </div>
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. Wejdź na stronę aplikacji z listą elementów (np. lista zadań).</br>
+                        2. Kliknij przycisk <i>Usuń</i> przy jednym z elementów (jeśli operacja jest wykonywana w tle,
+                        np.
+                        AJAX-em).</br>
+                        3. Otwórz narzędzia deweloperskie (DevTools) → zakładka <i>Network</i>.</br>
+                        4. Sprawdź, czy wysłane żądanie <code>DELETE</code> lub <code>PUT</code> otrzymało odpowiedź
+                        <strong>204 No Content</strong>.</br>
+                        5. Upewnij się, że nie ma odpowiedzi w zakładce „Response” – treść powinna być pusta.</br>
+                    </div>
+                    <h4>Co testujemy?</h4>
+                    • Czy serwer poprawnie zwraca kod <code>204</code> w odpowiednich przypadkach.</br>
+                    • Czy response body jest faktycznie puste.</br>
+                    • Czy operacja została rzeczywiście wykonana (np. element zniknął z listy).</br>
+
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli operacja została wykonana, a odpowiedź zawiera <code>204</code> i nie zawiera treści –
+                    wszystko
+                    działa poprawnie.</br>
+                    ❌ Jeśli odpowiedź zawiera ciało mimo kodu 204 – jest to błąd implementacji (204 nie może mieć
+                    body).</br>
+
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+
+                    🔍 <strong>Diagnostyka i testowanie</strong></br>
+                    • Sprawdzenie, czy odpowiedź z kodem 204 jest poprawnie obsługiwana przez klienta (np. frontend nie
+                    oczekuje danych).</br>
+                    • Zweryfikowanie, że brak body jest zgodny z oczekiwanym działaniem.</br>
+
+                    💾 <strong>Cache i dane</strong></br>
+                    • Kod 204 nie powinien być cache’owany z treścią – QA powinien sprawdzić nagłówki typu
+                    <code>Cache-Control</code>.</br>
+                    • Pomocne w testach mikroserwisów, gdy jedno API wywołuje inne, ale nie potrzebuje danych
+                    zwrotnych.</br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong></br>
+                    • Brak widocznej odpowiedzi to nie błąd – ale UI powinien wizualnie potwierdzić powodzenie (np.
+                    komunikat „Usunięto”).</br>
+                    • QA powinien sprawdzić, czy frontend poprawnie reaguje na brak treści w odpowiedzi.</br>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 3xx REDIRECTION -->
+        <section class="category-section" id="redirection">
+            <h2 class="category-title">3xx - Przekierowania</h2>
+
+            <div class="status-code redirect" data-category="3xx">
+                <h3>301 Moved Permanently</h3>
+                <div class="description"> <strong>Co to znaczy:</strong> Żądany zasób został trwale przeniesiony pod
+                    inny adres URL.<br> Kod 301 oznacza, że klient (np. przeglądarka lub aplikacja) powinien na stałe
+                    zapamiętać nową lokalizację i używać jej w przyszłości.<br> Serwer zwraca nowy adres w nagłówku
+                    <code>Location</code>, a klient automatycznie wykonuje przekierowanie.
+                </div>
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4> • Gdy zasób (np. strona, plik, API) został trwale przeniesiony na nowy
+                    adres.<br> • Po wdrożeniu trwałych zmian w strukturze URL aplikacji.<br> • Podczas migracji domeny
+                    lub przekierowań SEO.<br> • W przypadku ustawionych reguł przekierowania na serwerze (np. .htaccess,
+                    Nginx).
+                </div>
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4> • Wykonaj żądanie HTTP do starego adresu zasobu.<br> • Sprawdź, czy odpowiedź
+                    zawiera status <strong>301 Moved Permanently</strong>.<br> • Zweryfikuj, czy w nagłówku
+                    <code>Location</code> znajduje się nowy poprawny adres URL.<br> • Upewnij się, że klient (np.
+                    przeglądarka) automatycznie przechodzi pod nowy adres.<br>
+                </div>
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code"> 1. Wpisz w przeglądarce stary adres strony, np.
+                        <code>http://twojastrona.pl/stary-url</code>.<br> 2. Obserwuj, czy przeglądarka automatycznie
+                        przeniesie Cię pod nowy adres.<br> 3. Otwórz narzędzia deweloperskie (DevTools) → zakładka
+                        <i>Network</i>.<br> 4. Znajdź żądanie do starego adresu i sprawdź status:
+                        <code>301 Moved Permanently</code>.<br> 5. Sprawdź nagłówek <code>Location</code> – powinien
+                        zawierać nowy URL (np. <code>https://nowa-strona.pl/nowy-url</code>).<br>
+                    </div>
+                </div>
+                <h4>Co testujemy?</h4>
+                • Czy serwer poprawnie zwraca kod <code>301</code> dla przeniesionych zasobów.<br>
+                • Czy klient automatycznie przechodzi pod nowy adres.<br>
+                • Czy nagłówek <code>Location</code> jest obecny i prawidłowy.<br>
+
+                <h4>Podsumowanie</h4>
+                ✅ Jeśli przeglądarka (lub klient) przenosi użytkownika do nowego adresu, a odpowiedź zawiera kod 301 i
+                poprawny <code>Location</code> – wszystko działa poprawnie.<br>
+                ❌ Jeśli przekierowanie nie działa lub <code>Location</code> jest błędny – może to oznaczać złą
+                konfigurację po stronie serwera.<br>
+
+                <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+
+                🔍 <strong>Diagnostyka i testowanie</strong><br>
+                • Sprawdzenie, czy URL został trwale przekierowany.<br>
+                • Weryfikacja nagłówka <code>Location</code> i poprawności adresu.<br>
+
+                💾 <strong>Cache i dane</strong><br>
+                • Przeglądarki mogą cache’ować 301 – należy sprawdzić, czy zmiany są trwałe i nie powodują błędów.<br>
+
+                🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                • Użytkownik powinien płynnie zostać przeniesiony bez błędów.<br>
+                • QA powinien sprawdzić, czy nie dochodzi do zapętlenia lub błędnych przekierowań.<br>
+
+            </div>
+            <div class="status-code redirect" data-category="3xx">
+                <h3>302 Found</h3>
+                <div class="description"> <strong>Co to znaczy:</strong> Żądany zasób tymczasowo znajduje się pod innym
+                    adresem URL. <br>Kod 302 informuje, że klient powinien wykonać przekierowanie, ale nie należy
+                    zapamiętywać nowego adresu jako stałego. <br>Używany głównie do tymczasowych przekierowań, np.
+                    podczas logowania, płatności, lub w sytuacjach awaryjnych. <br>Nowy adres znajduje się w nagłówku
+                    <code>Location</code>.
+                </div>
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4> • Gdy zasób został tymczasowo przeniesiony na inny URL. <br>• Po
+                    operacjach typu logowanie, dodanie do koszyka, przekierowanie po formularzu. <br>• Gdy aplikacja
+                    webowa kieruje użytkownika na zewnętrzny system (np. płatności). <br>• Przy dynamicznych
+                    przekierowaniach zależnych od sesji użytkownika.
+                </div>
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4> • Wykonaj żądanie do starego lub pośredniego adresu URL. <br>• Sprawdź, czy
+                    odpowiedź zawiera status <strong>302 Found</strong>. <br>• Zweryfikuj nagłówek <code>Location</code>
+                    – musi wskazywać poprawny adres przekierowania. <br>• Sprawdź, czy klient (przeglądarka, aplikacja)
+                    automatycznie przechodzi pod wskazany adres.
+                </div>
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code"> 1. Wejdź na stronę logowania aplikacji webowej (np. <code>/login</code>).
+                        <br>2. Zaloguj się prawidłowo, podając login i hasło. <br>3. Otwórz narzędzia deweloperskie
+                        (DevTools) → zakładka <i>Network</i>. <br>4. Znajdź żądanie POST do endpointu logowania. <br>5.
+                        Sprawdź odpowiedź – status powinien być <code>302 Found</code>. <br>6. W nagłówku
+                        <code>Location</code> powinien znajdować się adres np. <code>/dashboard</code> lub
+                        <code>/start</code>.
+                    </div>
+                    <h4>Co testujemy?</h4> • Czy po operacji tymczasowej (np. logowaniu) występuje poprawne
+                    przekierowanie. <br>• Czy odpowiedź zawiera kod <code>302</code>. <br>• Czy klient automatycznie
+                    trafia pod adres z <code>Location</code>. <br>• Czy przekierowanie nie zapętla się i nie prowadzi do
+                    błędów (np. 404 lub 500). <br>
+                    <h4>Podsumowanie</h4> ✅ Jeśli przekierowanie zadziałało, klient trafił pod właściwy adres, a status
+                    to <code>302</code> z prawidłowym <code>Location</code> – wszystko działa poprawnie. <br>❌ Jeśli
+                    <code>Location</code> jest błędny lub przekierowanie się nie wykonuje – mamy do czynienia z błędną
+                    logiką przekierowań. <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+                    🔍 <strong>Diagnostyka i testowanie</strong><br>
+                    • Sprawdzenie, czy przekierowanie następuje i ma charakter tymczasowy.
+                    <br>• Weryfikacja nagłówków <code>Status</code> i <code>Location</code>.
+                    <br>• Upewnienie się, że klient nie zapamiętuje tymczasowego URL.<br>
+
+                    💾 <strong>Cache i dane</strong><br>
+                    • Kod 302 nie powinien być traktowany jako trwałe przekierowanie – QA powinien zweryfikować, że nie
+                    następuje cache nieprawidłowego URL.<br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                    • Użytkownik powinien być automatycznie przeniesiony do odpowiedniego miejsca, bez błędów.<br>
+                    • QA powinien sprawdzić, czy ścieżka użytkownika po stronie UI jest zgodna z logiką
+                    przekierowań.<br>
+
+                </div>
+            </div>
+
+            <div class="status-code redirect" data-category="3xx">
+                <h3>303 See Other</h3>
+                <div class="description"> <strong>Co to znaczy:</strong> Serwer pomyślnie przetworzył żądanie, ale
+                    zasób, którego wynikem jest odpowiedź, znajduje się pod innym adresem URL. <br>Kod 303 oznacza, że
+                    klient powinien wykonać **żądanie GET** pod nowym adresem wskazanym w nagłówku
+                    <code>Location</code>. <br>Najczęściej wykorzystywany po operacjach <code>POST</code>, np. zapisaniu
+                    formularza, aby przekierować użytkownika na stronę z wynikiem działania.
+                </div>
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4> • Po wykonaniu żądania <code>POST</code>, którego rezultat nie powinien
+                    być ponownie przetwarzany przy odświeżeniu strony. <br>• Gdy aplikacja webowa chce zapobiec
+                    powtórnemu wysłaniu formularza (tzw. efekt F5 po POST). <br>• W REST API – po przesłaniu danych
+                    klienta i przekierowaniu go na stronę zasobu (np. /użytkownicy/123). <br>• W logice
+                    „Post/Redirect/Get”.
+                </div>
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4> • Wykonaj żądanie <code>POST</code> (np. wysłanie formularza). <br>• Sprawdź,
+                    czy serwer odpowiada kodem <strong>303 See Other</strong>. <br>• Zweryfikuj nagłówek
+                    <code>Location</code> – powinien wskazywać nowy adres (gdzie klient powinien wykonać
+                    <code>GET</code>). <br>• Sprawdź, czy klient faktycznie wykonuje żądanie <code>GET</code> pod nowym
+                    adresem.
+                </div>
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code"> 1. Wejdź na stronę z formularzem (np. <code>/dodaj-zadanie</code>). <br>2.
+                        Wypełnij formularz i kliknij przycisk <i>Zapisz</i>. <br>3. Otwórz narzędzia deweloperskie
+                        (DevTools) → zakładka <i>Network</i>. <br>4. Znajdź żądanie <code>POST</code> i sprawdź jego
+                        odpowiedź. <br>5. Status odpowiedzi powinien być <code>303 See Other</code>. <br>6. W nagłówku
+                        <code>Location</code> powinien znajdować się nowy URL (np. <code>/zadanie/123</code>). <br>7.
+                        Klient powinien automatycznie przejść pod wskazany adres – wykonując <code>GET</code>.
+                    </div>
+                    <h4>Co testujemy?</h4> • Czy przekierowanie po <code>POST</code> działa poprawnie i zapobiega
+                    ponownemu wysłaniu formularza. <br>• Czy serwer zwraca poprawny kod <code>303</code> i nagłówek
+                    <code>Location</code>. <br>• Czy klient wykonuje <code>GET</code> pod wskazanym adresem (a nie np.
+                    ponownie <code>POST</code>). <br>• Czy zachowanie aplikacji zapobiega przypadkowemu nadpisaniu
+                    danych (np. przez odświeżenie strony). <h4>Podsumowanie</h4> ✅ Jeśli po <code>POST</code> następuje
+                    przekierowanie 303, klient przechodzi do nowego adresu i nie wysyła formularza ponownie – wszystko
+                    działa prawidłowo. <br>❌ Jeśli klient ponownie wykonuje <code>POST</code> lub przekierowanie jest
+                    nieprawidłowe – należy poprawić implementację logiki PRG. <h4>Kluczowe obszary z punktu widzenia QA
+                        Engineera</h4>
+                    🔍 <strong>Diagnostyka i testowanie</strong><br>
+                    • Sprawdzenie, czy po operacji <code>POST</code> przekierowanie jest zgodne z metodą
+                    <code>GET</code>.<br>• Walidacja nagłówków odpowiedzi i czy nowy adres wskazuje właściwy zasób.<br>
+
+                    💾 <strong>Cache i dane</strong><br>
+                    • QA powinien upewnić się, że odpowiedź nie zawiera ciała, a dane nie są dublowane przy odświeżeniu.
+                    <br>• Istotne przy systemach, gdzie każde <code>POST</code> generuje nowe dane (np. zamówienia).<br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                    • Użytkownik nie powinien widzieć błędu po odświeżeniu strony – poprawna obsługa PRG to płynność
+                    działania formularzy.
+                    <br>• QA powinien zadbać, by użytkownik zawsze trafiał na stronę wynikową (np. szczegóły nowo
+                    dodanego obiektu).
+
+                </div>
+            </div>
+
+
+            <div class="status-code redirect" data-category="3xx">
+                <h3>304 Not Modified</h3>
+                <div class="description"> <strong>Co to znaczy:</strong> Serwer informuje, że żądany zasób **nie uległ
+                    zmianie** od czasu ostatniego pobrania przez klienta. <br>Odpowiedź <code>304</code> oznacza, że
+                    **nie trzeba ponownie przesyłać danych**, ponieważ klient może skorzystać z lokalnej (zcache’owanej)
+                    kopii. <br>To mechanizm optymalizacji – oszczędza transfer i przyspiesza działanie aplikacji.
+                    <br>Odpowiedź 304 **nie zawiera ciała (body)** – tylko nagłówki.
+                </div>
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4> • Gdy klient wysyła żądanie z nagłówkiem <code>If-Modified-Since</code>
+                    lub <code>If-None-Match</code> (np. z <code>ETag</code>). <br>• Gdy serwer porównuje wersję zasobu i
+                    uznaje, że nie ma zmian względem tego, co klient już ma w cache. <br>• Przy optymalizacji API, stron
+                    internetowych i zasobów statycznych (np. obrazów, skryptów JS, CSS).
+                </div>
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4> • Wykonaj żądanie <code>GET</code> do zasobu, który obsługuje cache (np. plik
+                    CSS lub endpoint API). <br>• W pierwszej odpowiedzi sprawdź nagłówek <code>ETag</code> lub
+                    <code>Last-Modified</code>. <br>• Ponownie wykonaj żądanie z nagłówkiem <code>If-None-Match</code>
+                    (lub <code>If-Modified-Since</code>). <br>• Sprawdź, czy odpowiedź ma status <strong>304 Not
+                        Modified</strong> – bez treści.
+                </div>
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code"> 1. Otwórz stronę internetową (np. aplikację frontendową z zasobami
+                        JS/CSS). <br>2. Otwórz narzędzia deweloperskie (DevTools) → zakładka <i>Network</i>. <br>3.
+                        Odśwież stronę klawiszem <code>F5</code>. <br>4. W filtrze Network wybierz np. plik
+                        <code>style.css</code> lub <code>api/data</code>. <br>5. Sprawdź odpowiedź: status powinien być
+                        <strong>304 Not Modified</strong>. <br>6. W zakładce „Headers” znajdź <code>If-None-Match</code>
+                        lub <code>If-Modified-Since</code> (request) i <code>ETag</code> / <code>Last-Modified</code>
+                        (response).
+                    </div>
+                    <h4>Co testujemy?</h4> • Czy klient prawidłowo wysyła nagłówki warunkowe. <br>• Czy serwer odpowiada
+                    304, jeśli zasób nie został zmodyfikowany. <br>• Czy klient wykorzystuje lokalną kopię (zamiast
+                    pobierać nową). <h4>Podsumowanie</h4> ✅ Jeśli serwer zwraca <code>304 Not Modified</code>, a klient
+                    korzysta z wersji z cache – wszystko działa prawidłowo. <br>❌ Jeśli serwer mimo braku zmian odsyła
+                    pełną odpowiedź (np. <code>200 OK</code> z ciałem), może to oznaczać brak wsparcia cache lub błędną
+                    konfigurację. <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+                    🔍 <strong>Diagnostyka i testowanie</strong><br>
+                    • Weryfikacja działania nagłówków <code>ETag</code>, <code>If-None-Match</code>,
+                    <code>Last-Modified</code>.
+                    <br>• Sprawdzenie, czy odpowiedź 304 nie zawiera niepotrzebnych danych.
+                    <br>• Testowanie działania cache w różnych przeglądarkach i klientach.<br>
+
+                    💾 <strong>Cache i dane</strong><br>
+                    • Kod <code>304</code> jest fundamentem skutecznego cache’owania.
+                    <br>• QA powinien ocenić wpływ 304 na szybkość ładowania strony i zużycie transferu.<br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                    • Dzięki 304 strona ładuje się szybciej – użytkownik nie zauważa opóźnień.
+                    <br>• QA powinien zadbać, by mimo cache dane były zawsze aktualne – jeśli zajdą zmiany, serwer
+                    powinien zwrócić <code>200 OK</code> z nową wersją.
+
+                </div>
+            </div>
+        </section>
+        <!-- 4xx  -->
+        <section class="category-section" id="client-error">
+            <h2 class="category-title">4xx - Błąd klienta</h2>
+
+            <div class="status-code client-error" data-category="4xx">
+                <h3>400 Bad Request</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer nie rozumie żądania, ponieważ jest ono nieprawidłowo
+                    sformułowane lub zawiera błędy składniowe. <br>
+                    Odpowiedź <code>400 Bad Request</code> oznacza, że problem leży po stronie klienta – np. brakuje
+                    wymaganych
+                    danych, JSON jest niepoprawny, albo wysłane dane są niezgodne z oczekiwanym formatem. <br>
+                </div>
+
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Gdy klient wysyła błędnie sformatowane żądanie <i>HTTP</i> (np. nieprawidłowy JSON, złe nagłówki).
+                    <br>
+                    • Gdy żądanie brakuje wymaganych danych (np. pola <code>email</code>, <code>password</code>). <br>
+                    • Gdy dane są sprzeczne z walidacją po stronie serwera (np. zbyt krótka nazwa użytkownika).
+                </div>
+
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • Wyślij żądanie <code>POST</code> lub <code>PUT</code> do API z niekompletnymi lub błędnymi
+                    danymi. <br>
+                    • Obserwuj odpowiedź: jeśli otrzymasz status <strong>400 Bad Request</strong>, oznacza to, że serwer
+                    wykrył błąd po stronie klienta. <br>
+                    • Sprawdź treść odpowiedzi – często zawiera wskazówki, co poszło nie tak.
+                </div>
+
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. Otwórz narzędzie typu <code>Postman</code> lub <code>curl</code>. <br>
+                        2. Wyślij żądanie <code>POST</code> do endpointu (np. <code>/api/login</code>) bez wymaganych
+                        pól, np. tylko z <code>{"email": ""}</code>. <br>
+                        3. Sprawdź odpowiedź: status powinien być <strong>400 Bad Request</strong>. <br>
+                        4. W treści odpowiedzi (jeśli występuje) znajdź komunikat błędu (np. "Missing password").
+                    </div>
+
+                    <h4>Co testujemy?</h4>
+                    • Czy serwer prawidłowo waliduje dane wejściowe. <br>
+                    • Czy błędne dane są odrzucane z odpowiednim statusem. <br>
+                    • Czy odpowiedź zawiera jasny komunikat dla programisty lub użytkownika.
+
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli serwer odrzuca nieprawidłowe żądania z kodem <code>400</code> i dostarcza pomocny opis błędu
+                    – wszystko działa prawidłowo. <br>
+                    ❌ Jeśli serwer akceptuje błędne dane lub odpowiada <code>500 Internal Server Error</code> zamiast
+                    <code>400</code>, może to wskazywać na brak walidacji lub niewłaściwe przetwarzanie danych.
+
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+                    🔍 <strong>Diagnostyka i testowanie</strong><br>
+                    • Sprawdzenie, czy każda walidacja po stronie serwera działa zgodnie ze specyfikacją. <br>
+                    • Testowanie różnych wariantów błędnych danych (brak pól, błędne typy, za krótkie ciągi).<br>
+
+                    💾 <strong>Cache i dane</strong><br>
+                    • Odpowiedź <code>400</code> zabezpiecza aplikację przed przetwarzaniem szkodliwych lub
+                    niekompletnych danych.
+                    <br>
+                    • QA powinien upewnić się, że żadne nieprawidłowe dane nie przechodzą dalej.<br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                    • Komunikaty o błędach powinny być jasne i pomocne. <br>
+                    • QA powinien sprawdzić, czy aplikacja frontendowa właściwie reaguje na błędy <code>400</code> (np.
+                    wyświetla
+                    użytkownikowi informację o brakujących danych).
+                </div>
+
+            </div>
+            <div class="status-code client-error" data-category="4xx">
+                <h3>401 Unauthorized</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer odrzucił żądanie, ponieważ klient nie dostarczył poprawnych
+                    danych uwierzytelniających lub w ogóle ich nie przesłał. <br>
+                    Kod <code>401</code> oznacza, że dostęp do zasobu wymaga logowania lub tokenu autoryzacyjnego, a
+                    klient nie spełnia tych warunków. <br>
+                    To odpowiedź typowa dla zabezpieczonych endpointów API oraz zasobów wymagających uwierzytelnienia.
+                </div>
+
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Gdy klient nie dołącza nagłówka <code>Authorization</code> w żądaniu. <br>
+                    • Gdy token JWT lub inny mechanizm uwierzytelnienia jest nieprawidłowy, wygasł lub niezgodny z
+                    oczekiwaniami. <br>
+                    • Gdy próbujesz uzyskać dostęp do zasobu chronionego, nie będąc zalogowanym.
+                </div>
+
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • Wyślij żądanie <code>GET</code> lub <code>POST</code> do endpointu, który wymaga uwierzytelnienia
+                    – bez nagłówka <code>Authorization</code> lub z nieprawidłowym tokenem. <br>
+                    • Sprawdź, czy serwer odpowiada statusem <code>401 Unauthorized</code>. <br>
+                    • Zweryfikuj, czy w odpowiedzi znajduje się wskazówka typu: „Token missing or invalid”.
+                </div>
+
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. Otwórz aplikację internetową, która wymaga logowania (np. panel użytkownika lub strona z
+                        profilem). <br>
+                        2. Wyloguj się z aplikacji lub otwórz stronę w trybie prywatnym/incognito. <br>
+                        3. W pasku adresu wpisz bezpośredni link do chronionej podstrony. <br>
+                        4. Obserwuj, czy aplikacja przekierowuje Cię na ekran logowania. <br>
+                        5. Otwórz narzędzia deweloperskie (F12) → zakładka <i>Network</i>, odśwież stronę. <br>
+                        6. Wybierz żądanie do chronionego endpointu (np. <code>/api/user</code>) i sprawdź, czy
+                        odpowiedź ma status <code>401 Unauthorized</code>. <br>
+                    </div>
+
+                    <h4>Co testujemy?</h4>
+                    • Czy serwer poprawnie odrzuca niezalogowanych użytkowników. <br>
+                    • Czy komunikaty o błędach są jasne i precyzyjne. <br>
+                    • Czy chronione endpointy nie dają dostępu bez uwierzytelnienia.
+
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli nieautoryzowane żądanie kończy się statusem <code>401</code>, a chronione zasoby są
+                    zabezpieczone – wszystko działa poprawnie. <br>
+                    ❌ Jeśli serwer wpuszcza użytkownika bez tokena lub nieprawidłowo obsługuje błędy uwierzytelniania –
+                    to poważna luka w zabezpieczeniach.
+
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+
+                    🔍 <strong>Diagnostyka i testowanie</strong><br>
+                    • Testowanie wszystkich chronionych endpointów – czy zawsze wymagają poprawnego uwierzytelnienia.
+                    <br>
+                    • Sprawdzenie reakcji serwera na brak nagłówka <code>Authorization</code>, niepoprawny token i token
+                    wygasły. <br>
+                    • Weryfikacja, czy odpowiedź 401 pojawia się zgodnie ze specyfikacją – tylko w sytuacjach braku
+                    autoryzacji.<br>
+
+                    💾 <strong>Cache i dane</strong><br>
+                    • Upewnienie się, że odpowiedź 401 nie jest cache’owana przez przeglądarkę lub proxy (nagłówki typu
+                    <code>Cache-Control: no-store</code>). <br>
+                    • Sprawdzenie, czy odpowiedź zawiera jednoznaczny komunikat (np. "Missing token", "Invalid
+                    credentials"). <br>
+                    • Weryfikacja, czy aplikacja frontendowa poprawnie reaguje na błąd 401 – np. przekierowuje na ekran
+                    logowania.<br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                    • QA powinien testować scenariusze logowania, wylogowania i wygasania sesji – jak aplikacja
+                    obsługuje utratę autoryzacji. <br>
+                    • Użytkownik powinien otrzymać jasny komunikat i możliwość ponownego zalogowania. <br>
+                    • Ważne, by 401 nie był używany do błędów serwera – nie należy mylić z <code>403 Forbidden</code>
+                    ani <code>500 Internal Server Error</code>.
+
+                </div>
+            </div>
+            <div class="status-code client-error" data-category="4xx">
+
+                <h3>403 Forbidden</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer rozumie żądanie, ale **odmawia jego wykonania** – klient nie
+                    ma odpowiednich uprawnień do zasobu. <br>
+                    Kod <code>403</code> oznacza, że użytkownik jest **uwierzytelniony**, ale **nie ma dostępu** do
+                    danego zasobu lub akcji. <br>
+                    To różni się od <code>401 Unauthorized</code>, który dotyczy braku uwierzytelnienia – tutaj
+                    uwierzytelnienie istnieje, ale nie wystarcza.
+                </div>
+
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Gdy użytkownik próbuje wykonać akcję, do której nie ma uprawnień (np. edycja danych, dostęp do
+                    panelu admina). <br>
+                    • Gdy system ACL (kontroli dostępu) blokuje dostęp pomimo poprawnego logowania. <br>
+                    • Gdy zasób jest celowo zablokowany (np. adres IP zablokowany, dostęp ograniczony do wybranych ról).
+                </div>
+
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • Zaloguj się jako zwykły użytkownik. <br>
+                    • Spróbuj wykonać akcję dostępną tylko dla administratora (np. wejście na stronę <code>/admin</code>
+                    lub usunięcie innego konta). <br>
+                    • Sprawdź w zakładce <i>Network</i> (DevTools), czy odpowiedź z serwera ma status
+                    <code>403 Forbidden</code>. <br>
+                    • Zweryfikuj, czy aplikacja frontendowa wyświetla stosowny komunikat o braku dostępu.
+                </div>
+
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. Zaloguj się do aplikacji jako użytkownik bez uprawnień administratora. <br>
+                        2. W pasku adresu wpisz bezpośredni link do zasobu, który powinien być dostępny tylko dla
+                        administratora (np. <code>/admin</code>, <code>/ustawienia-systemu</code>). <br>
+                        3. Obserwuj, co robi aplikacja – czy wyświetla komunikat o braku dostępu lub przekierowuje. <br>
+                        4. Otwórz narzędzia deweloperskie (F12), zakładka <i>Network</i>, odśwież stronę. <br>
+                        5. Wybierz żądanie do chronionego endpointu (np. <code>/api/admin</code>) i sprawdź, czy
+                        odpowiedź ma status <strong>403 Forbidden</strong>.
+                    </div>
+
+                    <h4>Co testujemy?</h4>
+                    • Czy aplikacja prawidłowo blokuje dostęp użytkownikom bez odpowiednich uprawnień. <br>
+                    • Czy serwer nie wykonuje nieautoryzowanych akcji. <br>
+                    • Czy aplikacja przekazuje użytkownikowi jasny komunikat o braku dostępu.
+
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli użytkownik bez uprawnień otrzymuje <code>403 Forbidden</code> i aplikacja odpowiednio to
+                    obsługuje – wszystko działa poprawnie. <br>
+                    ❌ Jeśli serwer wykonuje akcję mimo braku uprawnień lub zwraca inny kod (np. <code>200</code> lub
+                    <code>500</code>) – to błąd w logice zabezpieczeń.
+
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+
+                    🔍 <strong>Diagnostyka i testowanie</strong><br>
+                    • Testowanie wszystkich ról i poziomów dostępu – czy użytkownik widzi tylko to, co powinien. <br>
+                    • Próby nieautoryzowanych akcji przez zalogowanych użytkowników – sprawdzenie, czy serwer odrzuca je
+                    z kodem <code>403</code>.<br>
+
+                    💾 <strong>Cache i dane</strong><br>
+                    • Sprawdzenie, czy odpowiedzi 403 nie są przypadkowo cache’owane (mogłoby to zablokować dostęp także
+                    uprawnionym użytkownikom). <br>
+                    • Weryfikacja komunikatów serwera – czy nie zawierają poufnych informacji (np. o strukturze
+                    zabezpieczeń).<br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                    • QA powinien zadbać, by użytkownik otrzymał czytelny komunikat o braku uprawnień (np. „Nie masz
+                    dostępu do tej sekcji”). <br>
+                    • Aplikacja nie powinna wyświetlać opcji, do których użytkownik nie ma dostępu (np. ukrywanie
+                    przycisków „Usuń”, „Edytuj”). <br>
+                    • Użytkownik powinien być chroniony przed wykonaniem akcji, do których nie ma prawa, nawet jeśli zna
+                    link.
+                </div>
+            </div>
+
+            <div class="status-code client-error" data-category="4xx">
+                <h3>404 Not Found</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer **nie znalazł zasobu**, którego dotyczy żądanie. <br>
+                    Kod <code>404</code> oznacza, że adres URL jest nieprawidłowy, zasób został usunięty, nigdy nie
+                    istniał, lub klient próbował uzyskać dostęp do czegoś, co nie zostało obsłużone po stronie serwera.
+                    <br>
+                    To najczęstszy błąd występujący w aplikacjach webowych i API.
+                </div>
+
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Gdy użytkownik wpisze błędny adres URL. <br>
+                    • Gdy klient próbuje odwołać się do endpointu API, który nie istnieje. <br>
+                    • Gdy zasób (np. plik, strona, ID w bazie) został usunięty lub nigdy nie istniał. <br>
+                    • Gdy routing frontendowy nie jest poprawnie skonfigurowany (np. brak obsługi dla nieznanych
+                    ścieżek).
+                </div>
+
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • Otwórz aplikację i wpisz w pasku adresu **błędny URL** (np. <code>/coś-nieistniejącego</code>).
+                    <br>
+                    • Sprawdź, czy aplikacja wyświetla stronę błędu 404 lub odpowiedni komunikat. <br>
+                    • Otwórz narzędzia deweloperskie (F12) → zakładka <i>Network</i> i sprawdź, czy odpowiedź HTTP ma
+                    status <code>404 Not Found</code>.
+                </div>
+
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. W aplikacji webowej otwórz nową kartę lub przejdź do trybu incognito. <br>
+                        2. Wpisz w pasku adresu nieistniejącą ścieżkę, np. <code>/abcxyz</code> lub
+                        <code>/produkty/999999</code>. <br>
+                        3. Zobacz, czy aplikacja wyświetla komunikat typu „Nie znaleziono strony” lub przekierowuje na
+                        stronę błędu. <br>
+                        4. Otwórz zakładkę <i>Network</i> w DevTools i sprawdź, czy odpowiedź ma kod <strong>404 Not
+                            Found</strong>.
+                    </div>
+
+                    <h4>Co testujemy?</h4>
+                    • Czy aplikacja frontendowa i backendowa prawidłowo obsługują błędne ścieżki. <br>
+                    • Czy użytkownik otrzymuje jasny komunikat, gdy strona lub zasób nie istnieje. <br>
+                    • Czy routing działa poprawnie i nie generuje błędów 500 przy nieznanych ścieżkach.
+
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli błędny adres URL skutkuje kodem <code>404 Not Found</code> i odpowiednim komunikatem –
+                    wszystko działa prawidłowo. <br>
+                    ❌ Jeśli serwer zwraca <code>200 OK</code> dla nieistniejących stron lub <code>500</code> – może to
+                    oznaczać problem z routingiem lub obsługą błędów.
+
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+
+                    🔍 <strong>Diagnostyka i testowanie</strong><br>
+                    • Testowanie przypadków z błędnymi ścieżkami, brakującymi ID i nieistniejącymi zasobami. <br>
+                    • Weryfikacja, czy aplikacja nie wyświetla pustych ekranów lub błędów JavaScript zamiast strony
+                    404.<br>
+
+                    💾 <strong>Cache i dane</strong><br>
+                    • Upewnienie się, że błędy 404 nie są cache’owane długoterminowo (nagłówki
+                    <code>Cache-Control</code>). <br>
+                    • Sprawdzenie, czy błędne ID nie są interpretowane jako poprawne dane (np. zwracane jako
+                    <code>null</code> z kodem <code>200</code>).<br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                    • QA powinien ocenić jakość strony błędu 404 – czy jest estetyczna i informacyjna. <br>
+                    • Dobrze, jeśli strona 404 zawiera przycisk powrotu lub link do strony głównej. <br>
+                    • Aplikacja nie powinna pozwalać użytkownikowi „utknąć” na błędnym adresie bez możliwości powrotu.
+                </div>
+
+
+            </div>
+
+            <div class="status-code client-error" data-category="4xx">
+                <h3>409 Conflict</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer **nie może przetworzyć żądania**, ponieważ powoduje ono
+                    konflikt z bieżącym stanem zasobu. <br>
+                    Kod <code>409</code> oznacza, że dane przesyłane przez klienta są sprzeczne z aktualnym stanem
+                    aplikacji – np. duplikują istniejące dane lub łamią reguły integralności. <br>
+                    Często występuje w aplikacjach z operacjami zapisu, aktualizacji lub tworzenia unikalnych zasobów.
+                </div>
+
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Gdy klient próbuje utworzyć zasób, który już istnieje (np. użytkownik z takim samym adresem
+                    e-mail). <br>
+                    • Gdy aktualizacja koliduje z inną wersją danych (np. konflikt wersji przy edycji rekordu). <br>
+                    • Gdy system posiada reguły biznesowe wykluczające daną operację – np. zakaz usuwania zasobu w
+                    określonym stanie.
+                </div>
+
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • W aplikacji wykonaj akcję tworzenia zasobu (np. nowego użytkownika) z danymi, które już istnieją.
+                    <br>
+                    • Sprawdź, czy serwer odpowiada kodem <code>409 Conflict</code>. <br>
+                    • Upewnij się, że aplikacja frontendowa wyświetla komunikat o konflikcie (np. „Taki e-mail już
+                    istnieje”).
+                </div>
+
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. Zarejestruj nowego użytkownika w aplikacji z adresem e-mail. <br>
+                        2. Po udanym utworzeniu konta, spróbuj ponownie zarejestrować się z tym samym adresem e-mail.
+                        <br>
+                        3. Obserwuj zachowanie aplikacji – powinna wyświetlić informację o konflikcie danych. <br>
+                        4. Otwórz narzędzia deweloperskie (F12), zakładka <i>Network</i>. Sprawdź, czy żądanie
+                        <code>POST /api/register</code> zwróciło status <strong>409 Conflict</strong>. <br>
+                    </div>
+
+                    <h4>Co testujemy?</h4>
+                    • Czy serwer poprawnie wykrywa i odrzuca konfliktujące dane. <br>
+                    • Czy aplikacja przekazuje użytkownikowi zrozumiały komunikat. <br>
+                    • Czy logika backendu zapobiega duplikacji lub naruszeniu integralności danych.
+
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli operacja, która powoduje konflikt, zwraca <code>409 Conflict</code>, a użytkownik jest o tym
+                    informowany – zachowanie jest prawidłowe. <br>
+                    ❌ Jeśli serwer akceptuje dane mimo konfliktu lub zwraca błędny status (np. <code>200</code> lub
+                    <code>500</code>) – to poważny błąd w logice walidacji.
+
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+
+                    🔍 <strong>Diagnostyka i testowanie</strong><br>
+                    • Testowanie unikalności danych (e-mail, login, ID). <br>
+                    • Próby rejestracji, edycji lub operacji CRUD z konfliktującymi danymi. <br>
+                    • Weryfikacja, czy serwer nie dopuszcza do nadpisywania zasobów.<br>
+
+                    💾 <strong>Cache i dane</strong><br>
+                    • Czy dane są poprawnie weryfikowane względem bazy – nie tylko po stronie frontend. <br>
+                    • Czy odpowiedź 409 nie zawiera poufnych informacji (np. szczegółów bazy lub reguł walidacji).<br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                    • QA powinien ocenić, czy użytkownik wie, co poszło nie tak – np. jasny komunikat: „Taki użytkownik
+                    już istnieje”. <br>
+                    • Aplikacja nie powinna pozwalać na ponowną próbę, jeśli konflikt jest nieusuwalny (np.
+                    niezmienialny login). <br>
+                    • Formularze powinny walidować dane także po stronie klienta – ale ostateczna kontrola musi być na
+                    backendzie.
+                </div>
+
+
+            </div>
+
+            <div class="status-code client-error" data-category="4xx">
+
+                <h3>422 Unprocessable Entity</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer **rozumie treść żądania**, ale nie może go przetworzyć,
+                    ponieważ zawiera **nieprawidłowe dane**. <br>
+                    Kod <code>422</code> oznacza, że dane są składniowo poprawne (np. poprawny JSON), ale nie spełniają
+                    wymagań walidacyjnych – np. brakuje pola, format jest nieprawidłowy lub dane są sprzeczne z logiką
+                    biznesową. <br>
+                    Jest to częsty kod odpowiedzi w aplikacjach REST API, szczególnie przy tworzeniu i edycji zasobów.
+                </div>
+
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Gdy żądanie zawiera niepełne, błędne lub nieprawidłowo sformatowane dane (np. e-mail bez „@”).
+                    <br>
+                    • Gdy brakuje wymaganych pól w formularzu. <br>
+                    • Gdy dane naruszają reguły biznesowe, mimo poprawnej składni (np. data w przeszłości, niedozwolona
+                    wartość). <br>
+                    • Gdy backend wykonuje walidację i odrzuca dane, które frontend przepuścił.
+                </div>
+
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • Wypełnij formularz w aplikacji celowo błędnie (np. zostaw wymagane pole puste lub wpisz zły format
+                    e-maila). <br>
+                    • Spróbuj go wysłać – sprawdź, czy aplikacja frontendowa i backendowa reagują odpowiednio. <br>
+                    • W narzędziach deweloperskich (DevTools → zakładka <i>Network</i>) sprawdź, czy odpowiedź z serwera
+                    ma status <code>422 Unprocessable Entity</code>.
+                </div>
+
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. Otwórz formularz rejestracji lub dodawania danych (np. nowego klienta, produktu). <br>
+                        2. Wpisz błędny adres e-mail (np. <code>test[at]example</code>) lub zostaw puste wymagane pole
+                        (np. imię). <br>
+                        3. Kliknij „Zarejestruj” lub „Zapisz”. <br>
+                        4. Sprawdź, czy pojawił się komunikat walidacyjny (np. „Nieprawidłowy format e-maila”). <br>
+                        5. Otwórz DevTools → zakładka <i>Network</i> i znajdź odpowiednie żądanie <code>POST</code> lub
+                        <code>PUT</code>. <br>
+                        6. Sprawdź, czy odpowiedź z backendu ma status <strong>422 Unprocessable Entity</strong> i
+                        zawiera informacje o błędach.
+                    </div>
+
+                    <h4>Co testujemy?</h4>
+                    • Czy backend waliduje dane niezależnie od tego, co robi frontend. <br>
+                    • Czy komunikaty walidacyjne są czytelne i dopasowane do błędów. <br>
+                    • Czy aplikacja poprawnie obsługuje błędy i nie zapisuje nieprawidłowych danych.
+
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli przy nieprawidłowych danych backend zwraca <code>422</code> i frontend wyświetla odpowiedni
+                    komunikat – zachowanie jest poprawne. <br>
+                    ❌ Jeśli błędne dane są akceptowane lub zwracany jest inny kod (np. <code>400</code>,
+                    <code>500</code>) – to błąd walidacji lub niejednoznaczna obsługa żądań.
+
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+
+                    🔍 <strong>Diagnostyka i testowanie</strong><br>
+                    • Testowanie każdego pola formularza z różnymi typami błędów (pusty, zły format, zduplikowane dane).
+                    <br>
+                    • Weryfikacja, czy komunikaty walidacyjne są jednoznaczne i widoczne dla użytkownika. <br>
+                    • Upewnienie się, że backend odrzuca błędne dane nawet jeśli frontend ich nie waliduje.<br>
+
+                    💾 <strong>Cache i dane</strong><br>
+                    • Dane nie powinny być zapisywane w bazie przy błędzie 422. <br>
+                    • QA powinien sprawdzić, czy odpowiedź nie jest cache’owana (powinna zawierać np.
+                    <code>Cache-Control: no-store</code>). <br>
+                    • Warto sprawdzić, czy zwracane komunikaty nie zawierają informacji debugowych z backendu (np.
+                    śladów stosu).<br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                    • Użytkownik powinien dostać jasną informację, co poszło nie tak – najlepiej przy każdym błędnym
+                    polu. <br>
+
+                </div>
+
+        </section>
+        <!-- 5xx  -->
+        <section class="category-section" id="server-error">
+            <h2 class="category-title">5xx - Błąd serwera</h2>
+
+            <div class="status-code server-error" data-category="5xx">
+
+                <h3>500 Internal Server Error</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer napotkał **nieoczekiwany błąd** i nie był w stanie obsłużyć
+                    żądania. <br>
+                    Kod <code>500</code> oznacza, że problem wystąpił po stronie serwera – np. wyjątek w kodzie, błąd
+                    konfiguracji, problem z bazą danych lub brak obsługi błędnych danych. <br>
+                    Jest to ogólny błąd serwera, który często wskazuje na brak odpowiedniego mechanizmu obsługi
+                    wyjątków.
+                </div>
+
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Gdy backend nie obsługuje wyjątku lub występuje awaria (np. brak połączenia z bazą danych). <br>
+                    • Gdy wystąpi nieprzewidziana sytuacja w logice aplikacji (np. dzielenie przez zero, null
+                    reference). <br>
+                    • Gdy żądanie zawiera dane, których backend nie potrafi przetworzyć, a nie przewidziano walidacji.
+                    <br>
+                    • Gdy konfiguracja środowiska (np. błędne zmienne .env) powoduje wyjątek runtime.
+                </div>
+
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • Wykonaj nietypowe lub skrajne żądanie (np. bardzo długi tekst, błędny format danych, brak
+                    wymaganych zależności). <br>
+                    • Spróbuj uzyskać dostęp do nieistniejącej funkcjonalności, która nie jest poprawnie zabezpieczona.
+                    <br>
+                    • W DevTools → zakładka <i>Network</i>, sprawdź, czy serwer odpowiada statusem
+                    <code>500 Internal Server Error</code>.
+                </div>
+
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. Otwórz formularz (np. kontaktowy lub rejestracyjny) i wpisz w pole tekstowe bardzo długi ciąg
+                        znaków (np. 10 000 znaków). <br>
+                        2. Kliknij „Wyślij” lub „Zapisz”. <br>
+                        3. Obserwuj zachowanie aplikacji – jeśli nie wyświetli walidacji, a serwer zwróci błąd, możliwe
+                        że dojdzie do <strong>500 Internal Server Error</strong>. <br>
+                        4. Otwórz DevTools → zakładka <i>Network</i> i znajdź żądanie – sprawdź, czy odpowiedź ma status
+                        500. <br>
+                        5. (Opcjonalnie) W środowisku testowym celowo wywołaj wyjątek w backendzie i sprawdź, czy system
+                        loguje go poprawnie i nie ujawnia treści błędu użytkownikowi.
+                    </div>
+
+                    <h4>Co testujemy?</h4>
+                    • Czy serwer potrafi obsłużyć nieprzewidziane sytuacje bez crashowania. <br>
+                    • Czy backend loguje błąd i nie przekazuje go wprost do użytkownika. <br>
+                    • Czy aplikacja frontendowa reaguje poprawnie (np. komunikatem typu: „Coś poszło nie tak”).
+
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli serwer odrzuca błędne żądania z poprawnym kodem (np. <code>400</code>, <code>422</code>) i
+                    nie wpada w <code>500</code> – obsługa błędów jest właściwa. <br>
+                    ❌ Jeśli użytkownik może łatwo spowodować <code>500</code>, a system nie informuje go odpowiednio lub
+                    wyświetla treści debugowe – to błąd projektowy.
+
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+
+                    🔍 <strong>Diagnostyka i testowanie</strong><br>
+                    • Testowanie ekstremalnych danych wejściowych (null, brak pól, niepoprawne typy, ogromne stringi).
+                    <br>
+                    • Celowe wywoływanie sytuacji wyjątkowych w środowisku testowym. <br>
+                    • Weryfikacja logów serwera – czy zawierają szczegóły błędu (stack trace) i czy są logowane zgodnie
+                    z polityką.<br>
+
+                    💾 <strong>Cache i dane</strong><br>
+                    • Upewnienie się, że odpowiedzi 500 nie są cache’owane (nagłówki <code>Cache-Control</code>). <br>
+                    • Sprawdzenie, czy błędy nie powodują częściowego zapisu danych lub uszkodzenia stanu aplikacji.<br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                    • QA powinien zadbać, by użytkownik w razie 500 otrzymał informację w stylu „Wystąpił błąd po
+                    stronie serwera, spróbuj ponownie później”. <br>
+                    • Aplikacja nie powinna pokazywać użytkownikowi surowych błędów (np. traceback, SQL error). <br>
+                    • Frontend powinien mieć zabezpieczenia na wypadek nieoczekiwanych odpowiedzi z serwera.
+
+                </div>
+            </div>
+
+            <div class="status-code server-error" data-category="5xx">
+                <h3>502 Bad Gateway</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer pośredniczący (np. bramka, proxy lub load balancer) **otrzymał
+                    nieprawidłową odpowiedź** od serwera docelowego. <br>
+                    Kod <code>502</code> oznacza, że serwer frontendowy (np. Nginx) nie może poprawnie skomunikować się
+                    z backendem – przyczyną może być awaria, błędna konfiguracja lub zbyt długi czas odpowiedzi. <br>
+                    Błąd ten dotyczy warstwy infrastruktury i komunikacji między serwerami.
+                </div>
+
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Gdy backend (np. serwis API) nie odpowiada lub zwraca błędną odpowiedź HTTP. <br>
+                    • Gdy serwer frontendowy (np. reverse proxy) nie może ustanowić połączenia z backendem. <br>
+                    • Gdy backend się restartuje, przeciąża lub nie nasłuchuje na odpowiednim porcie. <br>
+                    • Gdy występuje błąd DNS, problem z siecią lub zapętlenie między usługami.
+                </div>
+
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • Celowo zatrzymaj usługę backendową lub zmień jej port tak, by proxy nie mogło się z nią połączyć.
+                    <br>
+                    • Wejdź na stronę frontendową lub wykonaj żądanie do API – powinno zakończyć się statusem
+                    <code>502 Bad Gateway</code>. <br>
+                    • Sprawdź, czy system loguje błąd i nie ujawnia szczegółów infrastruktury użytkownikowi.
+                </div>
+
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. W środowisku deweloperskim lub testowym zatrzymaj backend (np. <code>npm stop</code>,
+                        <code>docker stop</code> lub zatrzymanie serwera API). <br>
+                        2. Otwórz frontend aplikacji lub wykonaj żądanie do API za pomocą Postmana. <br>
+                        3. Sprawdź, czy aplikacja nie ładuje się lub zwraca błąd sieci. <br>
+                        4. Otwórz DevTools → zakładka <i>Network</i> i sprawdź status żądania – powinien być <strong>502
+                            Bad Gateway</strong>. <br>
+                        5. Uruchom ponownie backend i sprawdź, czy aplikacja działa ponownie bez błędu.
+                    </div>
+
+                    <h4>Co testujemy?</h4>
+                    • Czy infrastruktura poprawnie raportuje błędy komunikacji między usługami. <br>
+                    • Czy użytkownik nie widzi wewnętrznych szczegółów błędu (np. stack trace Nginx, ścieżek
+                    systemowych). <br>
+                    • Czy logi DevOps/serwera zawierają wystarczające informacje do diagnozy.
+
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli system zwraca <code>502 Bad Gateway</code> w przypadku niedostępności backendu i aplikacja
+                    reaguje informacyjnie – wszystko działa zgodnie z oczekiwaniem. <br>
+                    ❌ Jeśli błąd 502 pojawia się bez przyczyny lub użytkownik widzi szczegóły systemowe – to błąd w
+                    konfiguracji proxy lub obsługi błędów.
+
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+
+                    🔍 <strong>Diagnostyka i testowanie</strong><br>
+                    • Testowanie zachowania aplikacji przy awarii backendu lub restartach usług. <br>
+                    • Sprawdzenie komunikacji pomiędzy usługami w środowisku staging/dev. <br>
+                    • Weryfikacja logów reverse proxy (np. Nginx, HAProxy) pod kątem przyczyny błędu.<br>
+
+                    💾 <strong>Cache i dane</strong><br>
+                    • Błąd 502 nie powinien być cache’owany przez frontend lub CDN – QA powinien zweryfikować nagłówki.
+                    <br>
+                    • Sprawdzenie, czy dane użytkownika nie są utracone w momencie wystąpienia błędu (np. przerwane
+                    zapisy formularzy).<br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                    • QA powinien sprawdzić, czy użytkownik otrzymuje jasny komunikat, np. „Serwis chwilowo niedostępny,
+                    spróbuj ponownie”. <br>
+                    • Aplikacja nie powinna zawieszać się lub pozostawać bez odpowiedzi. <br>
+                    • Dobrze, jeśli frontend przewiduje retry lub fallback przy błędach 502 (np. próba ponownego
+                    połączenia).
+                </div>
+
+
+            </div>
+
+            <div class="status-code server-error" data-category="5xx">
+
+                <h3>503 Service Unavailable</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer **jest tymczasowo niedostępny** i nie może teraz obsłużyć
+                    żądania. <br>
+                    Kod <code>503</code> oznacza, że serwer działa, ale **nie jest w stanie przetworzyć żądania w danym
+                    momencie** – np. z powodu przeciążenia, konserwacji lub restartu systemu. <br>
+                    Może być też używany celowo w trakcie wdrożeń lub podczas trybu „maintenance”.
+                </div>
+
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Gdy serwer jest przeciążony (np. zbyt wiele żądań w krótkim czasie). <br>
+                    • Podczas przerwy technicznej lub wdrażania aktualizacji. <br>
+                    • Gdy system jest celowo wyłączony lub backend nie działa, a proxy (np. Nginx) zwraca
+                    <code>503</code>. <br>
+                    • Gdy backend używa throttlingu (np. ogranicza liczbę zapytań na użytkownika).
+                </div>
+
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • W środowisku testowym wyłącz backend lub aktywuj tryb „maintenance” (np. przez plik
+                    <code>maintenance.html</code> w konfiguracji Nginx). <br>
+                    • Odśwież frontend lub wyślij żądanie do API – powinien pojawić się status
+                    <code>503 Service Unavailable</code>. <br>
+                    • Sprawdź, czy odpowiedź zawiera nagłówek <code>Retry-After</code>, jeśli jest ustawiony.
+                </div>
+
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. Zatrzymaj backend aplikacji w środowisku testowym (np. <code>docker stop</code> lub wyłącz
+                        proces serwera). <br>
+                        2. Otwórz aplikację frontendową w przeglądarce lub wyślij żądanie do API (np.
+                        <code>/api/status</code>). <br>
+                        3. Sprawdź w DevTools → zakładka <i>Network</i>, czy odpowiedź HTTP ma status <strong>503
+                            Service Unavailable</strong>. <br>
+                        4. (Opcjonalnie) Włącz tryb konserwacji i sprawdź, czy frontend wyświetla odpowiedni komunikat
+                        (np. „Serwis w trakcie aktualizacji”).
+                    </div>
+
+                    <h4>Co testujemy?</h4>
+                    • Czy system prawidłowo komunikuje brak dostępności usługi. <br>
+                    • Czy występuje nagłówek <code>Retry-After</code> – sugerujący, kiedy spróbować ponownie. <br>
+                    • Czy frontend reaguje poprawnie (komunikat, brak zapętleń, brak crashy).
+
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli serwer zwraca <code>503</code> w trakcie niedostępności i użytkownik jest o tym informowany
+                    – to poprawne działanie. <br>
+                    ❌ Jeśli aplikacja zawiesza się, nie pokazuje żadnego komunikatu lub błędnie zwraca <code>500</code>
+                    zamiast <code>503</code> – to błąd w obsłudze stanu serwera.
+
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+
+                    🔍 <strong>Diagnostyka i testowanie</strong><br>
+                    • Testowanie zachowania aplikacji w trakcie konserwacji lub restartów backendu. <br>
+                    • Weryfikacja obecności nagłówka <code>Retry-After</code>, jeśli aplikacja przewiduje takie użycie.
+                    <br>
+                    • Sprawdzenie logów – czy zawierają dokładne informacje o czasie niedostępności.<br>
+
+                    💾 <strong>Cache i dane</strong><br>
+                    • Odpowiedzi z kodem <code>503</code> nie powinny być cache’owane – QA powinien sprawdzić nagłówki
+                    <code>Cache-Control</code>. <br>
+                    • Upewnienie się, że dane użytkownika nie są tracone lub zapisywane w trakcie niedostępności.<br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                    • QA powinien sprawdzić, czy użytkownik otrzymuje czytelny komunikat typu „Serwis chwilowo
+                    niedostępny”. <br>
+                    • Dobrą praktyką jest strona informacyjna lub modal z wyjaśnieniem i sugestią ponownej próby. <br>
+                    • Aplikacja powinna unikać zapętleń żądań, spinnerów „w nieskończoność” lub zamrażania UI.
+                </div>
+
+            </div>
+
+            <div class="status-code server-error" data-category="5xx">
+                <h3>504 Gateway Timeout</h3>
+                <div class="description">
+                    <strong>Co to znaczy:</strong> Serwer pośredniczący (np. proxy, bramka, load balancer) **nie
+                    otrzymał odpowiedzi na czas** od serwera docelowego. <br>
+                    Kod <code>504</code> oznacza, że serwer frontendowy (np. Nginx) próbował połączyć się z backendem,
+                    ale ten **nie odpowiedział w wyznaczonym czasie**. <br>
+                    Ten błąd świadczy zwykle o opóźnieniach lub niedostępności usług backendowych, problemach z siecią
+                    lub złej konfiguracji timeoutów.
+                </div>
+
+                <div class="when-occurs">
+                    <h4>Kiedy się pojawia:</h4>
+                    • Gdy backend jest przeciążony i nie odpowiada w ustalonym czasie. <br>
+                    • Gdy backend wisi na długotrwałej operacji (np. duże zapytanie do bazy danych). <br>
+                    • Gdy konfiguracja serwera pośredniczącego (np. timeout w Nginx lub gateway API) jest zbyt niska.
+                    <br>
+                    • Gdy komunikacja między usługami trwa zbyt długo – np. przez opóźnienia w sieci lub zapętlenie
+                    requestów.
+                </div>
+
+                <div class="how-to-test">
+                    <h4>Jak testować:</h4>
+                    • W środowisku testowym przygotuj endpoint, który celowo „śpi” (np. czeka 10–15 sekund przed
+                    odpowiedzią). <br>
+                    • Wykonaj żądanie do tego endpointu z frontendu lub Postmana. <br>
+                    • Jeśli czas odpowiedzi przekroczy ustawiony timeout serwera proxy, otrzymasz status
+                    <code>504 Gateway Timeout</code>.
+                </div>
+
+                <div class="test-examples">
+                    <h4>Przykład testu:</h4>
+                    <div class="status-code">
+                        1. W środowisku testowym przygotuj backendowy endpoint, który celowo opóźnia odpowiedź (np.
+                        <code>/api/slow</code>). <br>
+                        2. W backendzie ustaw opóźnienie np. <code>sleep(15)</code>. <br>
+                        3. Wykonaj żądanie do tego endpointu przez frontend lub Postmana. <br>
+                        4. Otwórz DevTools → zakładka <i>Network</i>, znajdź żądanie – powinno zwrócić <strong>504
+                            Gateway Timeout</strong> po kilku sekundach. <br>
+                        5. (Opcjonalnie) Zmniejsz timeouty w konfiguracji proxy (np. <code>proxy_read_timeout</code>) i
+                        ponów test.
+                    </div>
+
+                    <h4>Co testujemy?</h4>
+                    • Czy system wykrywa i zgłasza problemy z długimi odpowiedziami backendu. <br>
+                    • Czy frontend odpowiednio obsługuje sytuację timeoutu (np. komunikat, brak spinnera bez końca).
+                    <br>
+                    • Czy w logach widoczne są informacje o przekroczeniu limitów czasu.
+
+                    <h4>Podsumowanie</h4>
+                    ✅ Jeśli aplikacja reaguje na 504 czytelnym komunikatem, a proxy i backend logują przyczynę błędu –
+                    wszystko działa poprawnie. <br>
+                    ❌ Jeśli użytkownik czeka „w nieskończoność” lub otrzymuje niespójny komunikat (albo nie otrzymuje go
+                    wcale) – UX i logika obsługi błędów wymagają poprawy.
+
+                    <h4>Kluczowe obszary z punktu widzenia QA Engineera</h4>
+
+                    🔍 <strong>Diagnostyka i testowanie</strong><br>
+                    • Testowanie długotrwałych żądań i sprawdzanie, czy nie przekraczają timeoutów proxy/backendu. <br>
+                    • Weryfikacja poprawności logów – czy zawierają informację o czasie, adresie i typie błędu. <br>
+                    • Symulowanie przeciążenia systemu (np. wiele żądań jednocześnie) i obserwowanie, czy pojawiają się
+                    504.<br>
+
+                    💾 <strong>Cache i dane</strong><br>
+                    • Odpowiedzi <code>504</code> nie powinny być cache’owane – QA powinien zweryfikować nagłówki
+                    <code>Cache-Control</code>. <br>
+                    • Aplikacja nie powinna ponawiać automatycznie żądań 504, jeśli nie ma retry logic – aby uniknąć
+                    dodatkowego obciążenia.<br>
+
+                    🧑‍💻 <strong>Doświadczenie użytkownika (UX)</strong><br>
+                    • QA powinien zadbać, aby użytkownik zobaczył komunikat: „Usługa chwilowo niedostępna. Spróbuj
+                    ponownie później.” <br>
+                    • Interfejs nie powinien się zawieszać – warto dodać timeouty po stronie frontendu. <br>
+                    • Jeśli możliwe, aplikacja może pokazywać przybliżony czas oczekiwania lub przycisk „Spróbuj
+                    ponownie”.
+                </div>
+
+
+            </div>
+
+        </section>
+        <!-- PORADY -->
+        <!-- CHECKLISTA DLA TESTERA -->
+        <section class="checklist-section" id="checklist" data-category="checklist">
+            <h2 class="category-title">📋 Checklista dla Testera</h2>
+
+            <div class="checklist-content">
+
+                <!-- SKLEP INTERNETOWY -->
+                <div class="app-type">
+                    <h3>🛒 SKLEP INTERNETOWY</h3>
+
+                    <h4>Kody KRYTYCZNE</h4>
+                    <table class="checklist-table">
+                        <thead>
+                            <tr>
+                                <th>Kod HTTP</th>
+                                <th>Opis</th>
+                                <th>Przykład testu</th>
+                                <th>Priorytet</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="code success">200 OK</span></td>
+                                <td>Podstawowe funkcje działają</td>
+                                <td>GET /produkty → lista produktów</td>
+                                <td><span class="priority high">WYSOKI</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">401 Unauthorized</span></td>
+                                <td>Brak sesji lub tokenu</td>
+                                <td>GET /konto → bez logowania</td>
+                                <td><span class="priority high">WYSOKI</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">403 Forbidden</span></td>
+                                <td>Brak uprawnień do zasobu</td>
+                                <td>GET /admin → użytkownik bez roli admin</td>
+                                <td><span class="priority high">WYSOKI</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">404 Not Found</span></td>
+                                <td>Nieistniejące produkty/strony</td>
+                                <td>GET /produkty/999999 → "Produkt nie znaleziony"</td>
+                                <td><span class="priority high">WYSOKI</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">409 Conflict</span></td>
+                                <td>Konflikt w stanie magazynowym</td>
+                                <td>POST /zamowienie → brak dostępności podczas składania</td>
+                                <td><span class="priority critical">KRYTYCZNY</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">422 Unprocessable Entity</span></td>
+                                <td>Błędne dane w formularzu</td>
+                                <td>POST /zamowienie → brak adresu e-mail</td>
+                                <td><span class="priority high">WYSOKI</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">500 Internal Server Error</span></td>
+                                <td>Awarie podczas płatności lub koszyka</td>
+                                <td>POST /platnosc → symulacja awarii</td>
+                                <td><span class="priority critical">KRYTYCZNY</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">503 Service Unavailable</span></td>
+                                <td>Przerwa serwisowa lub przeciążenie</td>
+                                <td>GET /produkty → backend niedostępny</td>
+                                <td><span class="priority critical">KRYTYCZNY</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+
+                <!-- APLIKACJA BANKOWA -->
+                <div class="app-type">
+                    <h3>🏦 APLIKACJA BANKOWA</h3>
+
+                    <h4>Kody KRYTYCZNE</h4>
+                    <table class="checklist-table">
+                        <thead>
+                            <tr>
+                                <th>Kod HTTP</th>
+                                <th>Opis</th>
+                                <th>Przykład testu</th>
+                                <th>Priorytet</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="code success">200 OK</span></td>
+                                <td>Dane konta i saldo są dostępne</td>
+                                <td>GET /konto/saldo</td>
+                                <td><span class="priority high">WYSOKI</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">401 Unauthorized</span></td>
+                                <td>Brak logowania lub token wygasł</td>
+                                <td>GET /konto → bez sesji</td>
+                                <td><span class="priority critical">KRYTYCZNY</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">403 Forbidden</span></td>
+                                <td>Próba przelewu z nieautoryzowanego konta</td>
+                                <td>POST /przelew → konto nie należy do użytkownika</td>
+                                <td><span class="priority critical">KRYTYCZNY</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">404 Not Found</span></td>
+                                <td>Nieistniejący numer konta</td>
+                                <td>GET /konto/123456789999 → brak danych</td>
+                                <td><span class="priority high">WYSOKI</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">409 Conflict</span></td>
+                                <td>Podwójny przelew lub operacja</td>
+                                <td>POST /przelew → drugi raz ta sama operacja</td>
+                                <td><span class="priority high">WYSOKI</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">422 Unprocessable Entity</span></td>
+                                <td>Nieprawidłowe dane przelewu</td>
+                                <td>POST /przelew → błędny IBAN</td>
+                                <td><span class="priority high">WYSOKI</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">503 Service Unavailable</span></td>
+                                <td>Przerwa w dostępie do systemu płatniczego</td>
+                                <td>POST /przelew → SWIFT niedostępny</td>
+                                <td><span class="priority critical">KRYTYCZNY</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+
+                <!-- APLIKACJA BANKOWA -->
+                <div class="app-type">
+                    <h3>🧑‍💼 SYSTEM HR</h3>
+
+                    <h4>Kody KRYTYCZNE</h4>
+                    <table class="checklist-table">
+                        <thead>
+                            <tr>
+                                <th>Kod HTTP</th>
+                                <th>Opis</th>
+                                <th>Przykład testu</th>
+                                <th>Priorytet</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="code success">200 OK</span></td>
+                                <td>Dane pracowników są widoczne</td>
+                                <td>GET /pracownicy</td>
+                                <td><span class="priority high">WYSOKI</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">401 Unauthorized</span></td>
+                                <td>Brak logowania lub sesji</td>
+                                <td>GET /profil → bez autoryzacji</td>
+                                <td><span class="priority critical">KRYTYCZNY</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">403 Forbidden</span></td>
+                                <td>Próba edycji danych bez uprawnień</td>
+                                <td>PUT /pracownicy/5 → rola „Użytkownik”</td>
+                                <td><span class="priority high">WYSOKI</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">404 Not Found</span></td>
+                                <td>Błędny ID pracownika</td>
+                                <td>GET /pracownicy/99999</td>
+                                <td><span class="priority high">WYSOKI</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">409 Conflict</span></td>
+                                <td>Konflikt przy jednoczesnej edycji</td>
+                                <td>PUT /pracownicy/7 → zapis z 2 sesji</td>
+                                <td><span class="priority high">WYSOKI</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">422 Unprocessable Entity</span></td>
+                                <td>Błędne dane kadrowe</td>
+                                <td>POST /pracownicy → brak PESEL</td>
+                                <td><span class="priority high">WYSOKI</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">500 Internal Server Error</span></td>
+                                <td>Błąd podczas generowania listy płac</td>
+                                <td>GET /raporty/lista-plac</td>
+                                <td><span class="priority critical">KRYTYCZNY</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+
+                </div>
+
+
+                <!-- UNIWERSALNY CHECKLIST -->
+                <div class="app-type">
+                    <h3>📋 UNIWERSALNA CHECKLISTA KODÓW HTTP</h3>
+                    <table class="checklist-table">
+                        <thead>
+                            <tr>
+                                <th>Kod HTTP</th>
+                                <th>Co testuje</th>
+                                <th>Szybki test</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="code success">200 OK</span>
+                                </td>
+                                <td>Podstawowe funkcjonowanie zasobów</td>
+                                <td>Otwórz stronę główną</td>
+                            </tr>
+                            <tr>
+                                <td><span class="code success">201 Created</span></td>
+                                <td>Tworzenie nowych zasobów</td>
+                                <td>POST /api/resource → nowe ID</td>
+                            </tr>
+                            <tr>
+                                <td><span class="code success">204 No Content</span></td>
+                                <td>Usuwanie zasobów lub puste odpowiedzi działają</td>
+                                <td>DELETE /api/resource/[id]</td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">400 Bad Request</span></td>
+                                <td>Błędy składni lub walidacji klienta</td>
+                                <td>Wyślij niepoprawny JSON / brak wymaganych pól</td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">401 Unauthorized</span></td>
+                                <td>Dostęp chroniony wymagający uwierzytelnienia</td>
+                                <td>GET /secure bez tokena</td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">403 Forbidden</span></td>
+                                <td>Dostęp z ograniczeniami uprawnień</td>
+                                <td>Dostęp do zasobu z rolą bez uprawnień</td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">404 Not Found</span></td>
+                                <td>Nieistniejące zasoby i poprawna obsługa URL</td>
+                                <td>GET /nieistniejacy → 404</td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">409 Conflict</span></td>
+                                <td>Konflikty operacyjne (np. duplikat, wersjonowanie)</td>
+                                <td>POST powtarzający istniejący zasób</td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">500 Internal Server Error</span></td>
+                                <td>Nieobsłużone wyjątki po stronie serwera</td>
+                                <td>Wyślij nietypowe skrajne dane</td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">502 Bad Gateway</span></td>
+                                <td>Problemy z pośrednikiem komunikacji</td>
+                                <td>Zatrzymaj backend lub wprowadź błędny upstream</td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">503 Service Unavailable</span></td>
+                                <td>Serwis tymczasowo niedostępny (maintenance)</td>
+                                <td>Wyłącz backend / symuluj maintenance</td>
+                            </tr>
+                            <tr>
+                                <td><span class="code error">504 Gateway Timeout</span></td>
+                                <td>Timeouty upstream, długie opóźnienia backendu</td>
+                                <td>Endpoint opóźniony > timeout proxy</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer style="text-align: center; padding: 2rem; background: #2c3e50; color: white;">
+        <p>HTTP Status Codes Guide - Przewodnik dla Testerów</p>
+        <p>Stworzony do celów edukacyjnych i testowych</p>
+    </footer>
+
+    <button id="scrollToTopBtn" title="Do góry">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="12" fill="none" />
+            <path d="M12 18V6M12 6L6 12M12 6l6 6" stroke="white" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+        </svg>
+    </button>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
